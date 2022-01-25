@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.db.models import fields
 from django_filters.filters import OrderingFilter
 
-from .models import Scheduler, UserProfile
+from .models import  UserProfile
 
 
 class UserFilter(django_filters.FilterSet):
