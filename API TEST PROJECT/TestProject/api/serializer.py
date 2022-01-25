@@ -9,10 +9,12 @@ from rest_framework import serializers
 from TestProject.rest_config import LocalDateTime, RepresentFilePath
 from TestProject.util import Util
 
-from .models import (CollectionAction, Customer, Invoice, Scheduler,
-                     SchedulerItem, UserGroup, UserProfile)
-
+from .models import  UserGroup, UserProfile
+from base.models import CodeTable,Currency
 # from TestProject.signals import DeleteOldFile
+from sales.models import *
+from base.models import *
+from customer.models import *
 
 class RolePermissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -118,19 +120,23 @@ class SchdulerSerializer(serializers.ModelSerializer):
 
 
 class ActionSerializer(serializers.ModelSerializer):
+    # def __init__(self, *args, **kwargs):
+    #     many = kwargs.pop('many', True)
+    #     super(ActionSerializer, self).__init__(many=many, *args, **kwargs)
+    
     scheduler_name = serializers.CharField(source="scheduler.scheduler_name",read_only=True)
     created_by = serializers.CharField(source="action_by.username",read_only=True)
     action_date = LocalDateTime(required=False)
-    next_action_date = LocalDateTime(required=False)
+    # next_action_date = LocalDateTime(required=False)
 
     class Meta:
         model = CollectionAction
-        fields = ["id","scheduler_name","scheduler","created_by","action_by","action_type","next_action_type","action_date","reference","next_reference","summary","note","next_action_date"]
+        fields = ["id","scheduler_name","scheduler","created_by","action_by","action_type","action_date","reference","summary"]
 
-    def create(self,validate_data):
-        scheduler= validate_data.get("scheduler")
-        Scheduler.objects.filter(id=scheduler.id).update(status="call_done")
-        return super().create(validate_data)
+    # def create(self,validate_data):
+    #     scheduler= validate_data.get("scheduler")
+    #     Scheduler.objects.filter(id=scheduler.id).update(status="call_done")
+    #     return super().create(validate_data)
 
 class SchedulerItemSerializer(serializers.ModelSerializer):
     invoice = InvoiceSerializer(many=True,source="invoice.pk")
@@ -157,15 +163,15 @@ class CreateSchedulerSerializer(serializers.ModelSerializer):
             scheduler_item.invoice.add(invoice)
         return scheduler_item
 
-    # def update(self, instance, validated_data):
-    #     scheduler_data = validated_data.pop("scheduler")
-    #     invoice_data = scheduler_data.pop("total_invoice")
-    #     scheduler_serializer = self.fields['scheduler']
-    #     invoice_serializer = self.fields['scheduler']["total_invoice"]
-    #     customer_data = invoice_data.pop("company")
-    #     customer_serializer = self.fields['scheduler']["total_invoice"]["company"]
-    #     scheduler_serializer.update(instance.scheduler, scheduler_data)
-    #     invoice_serializer.update(instance.scheduler.total_invoice,invoice_data)
-    #     customer_serializer.update(instance.scheduler.total_invoice.company, customer_data)
+    def update(self, instance, validated_data):
+        scheduler_data = validated_data.pop("scheduler")
+        invoice_data = scheduler_data.pop("total_invoice")
+        scheduler_serializer = self.fields['scheduler']
+        invoice_serializer = self.fields['scheduler']["total_invoice"]
+        customer_data = invoice_data.pop("company")
+        customer_serializer = self.fields['scheduler']["total_invoice"]["company"]
+        scheduler_serializer.update(instance.scheduler, scheduler_data)
+        invoice_serializer.update(instance.scheduler.total_invoice,invoice_data)
+        customer_serializer.update(instance.scheduler.total_invoice.company, customer_data)
 
-    #     return super().update(instance, validated_data)
+        return super().update(instance, validated_data)
