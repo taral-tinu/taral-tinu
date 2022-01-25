@@ -519,12 +519,9 @@ class SchedulerView(viewsets.ModelViewSet):
     serializer_class = CreateSchedulerSerializer
     pagination_class = CustomPagination
 
-
-
-
-
-
-
+class InvoiceView(viewsets.ModelViewSet):
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializer
 
 
 
