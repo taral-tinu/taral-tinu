@@ -2,19 +2,20 @@ import ast
 from tokenize import group
 from urllib import request
 
+from base.models import *
+from base.models import CodeTable, Currency
+from customer.models import *
 from django.contrib.auth.models import Group, User
 from django.db.models.signals import pre_save
 from django.forms import fields
 from rest_framework import serializers
+# from TestProject.signals import DeleteOldFile
+from sales.models import *
 from TestProject.rest_config import LocalDateTime, RepresentFilePath
 from TestProject.util import Util
 
-from .models import  UserGroup, UserProfile
-from base.models import CodeTable,Currency
-# from TestProject.signals import DeleteOldFile
-from sales.models import *
-from base.models import *
-from customer.models import *
+from .models import UserGroup, UserProfile
+
 
 class RolePermissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -120,10 +121,11 @@ class SchdulerSerializer(serializers.ModelSerializer):
         fields = ["id","scheduler_name","customer_name","total_reminder","total_invoice","created_on","scheduler"]
 
 
-class ActionSerializer(serializers.ModelSerializer):    
+class ActionSerializer(serializers.ModelSerializer):
     scheduler_name = serializers.CharField(source="scheduler.scheduler_name",read_only=True)
     created_by = serializers.CharField(source="action_by.username",read_only=True)
     action_date = LocalDateTime(required=False)
+    # action_type = serializers.CharField(source="action_type",write_only=True)
     # next_action_date = LocalDateTime(required=False)
 
     class Meta:

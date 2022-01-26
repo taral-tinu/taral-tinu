@@ -21,6 +21,8 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r"^admin/", admin.site.urls),
-    url(r"^dt/api/", include('api.urls'))
+    url(r"^dt/api/", include('api.urls')),
+    url(r"^dt/customer/", include('customer.urls'))
+
 ]
 urlpatterns += static(settings.RESOURCES_URL, document_root=settings.RESOURCES_ROOT)

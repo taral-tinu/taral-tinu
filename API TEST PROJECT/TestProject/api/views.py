@@ -3,6 +3,8 @@ import ast
 import logging
 from itertools import chain
 
+from base.models import *
+from customer.models import *
 from django.contrib.auth.models import User
 from django.db.models import (Case, F, Prefetch, Q, Subquery, Value, When,
                               Window)
@@ -16,23 +18,19 @@ from rest_framework.decorators import action, parser_classes
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from sales.models import *
 # from finance_api.finance_api import util
 from TestProject.rest_config import APIResponse, CustomPagination
 from TestProject.util import Util
 
 from .filter import CollectionActionFilter, RoleFilter, UserFilter
-from .models import ( ContentPermission, Group,
-                     GroupPermission,  MainMenu, PagePermission,
-                       UserGroup, UserProfile)
-from .serializer import ( SchdulerSerializer,SchedulerDetailSerializer,
-                          RolePermissionSerializer,InvoiceSerializer,
-                          ActionSerializer,CreateSchedulerSerializer,
+from .models import (ContentPermission, Group, GroupPermission, MainMenu,
+                     PagePermission, UserGroup, UserProfile)
+from .serializer import (ActionSerializer, CreateSchedulerSerializer,
+                         InvoiceSerializer, RolePermissionSerializer,
+                         SchdulerSerializer, SchedulerDetailSerializer,
                          UserListSerializer, UserProfileSerializer,
                          UserSerializer)
-from sales.models import *
-from base.models import *
-from customer.models import *
-
 
 
 class GetMenus(APIView):
@@ -264,12 +262,12 @@ class CollectionActionView(viewsets.ModelViewSet):
         query = Q()
         customer_id = self.request.data.get("customer_id")
         status = self.request.data.get("status")
-        # if status:
-        #     query.add(Q(status=status),query.connector)
+        if status:
+            query.add(Q(status__code=status),query.connector)
         if customer_id:
             query.add(Q(scheduler_item__invoice__company__id=customer_id),query.connector)
-        # else:
-        #     query.add(~Q(status="legal_action"),query.connector)
+        else:
+            query.add(~Q(status__code="legal_action"),query.connector)
         query.add(Q(scheduler_item__isnull=False),query.connector)
         queryset = (Scheduler.objects
         .prefetch_related("scheduler_item")
@@ -440,27 +438,27 @@ class ActionView(viewsets.ModelViewSet):
     queryset = CollectionAction.objects.all()
     serializer_class = ActionSerializer
     pagination_class = CustomPagination
-    
+
     def create(self, request):
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return APIResponse(serializer.data)
-    
+
     @action(detail=False, methods=['post'])
     def delete(self,request):
         action_id = request.data.get("action_id")
         CollectionAction.objects.filter(id=action_id).delete()
         return APIResponse(code=0, message="Action deleted")
-    
+
     @action(detail=False, methods=['post'])
     def update_action(self,request):
         action_id = request.data.get("action_id")
         action = CollectionAction.objects.get(id=action_id)
-        serializer = self.get_serializer(action,data=request.data)
+        serializer = self.get_serializer(action, data=request.data)
         self.perform_create(serializer)
         return APIResponse(serializer.data)
-        
+
 class ActionListView(generics.ListAPIView):
     serializer_class = ActionSerializer
     pagination_class = CustomPagination

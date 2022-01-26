@@ -1,10 +1,12 @@
-from django.db import models
+from base.models import CodeTable, Currency
+from customer.models import Customer, ECUser
 from django.contrib.auth.models import User
-from base.models import CodeTable,Currency
-from customer.models import Customer,User
+from django.db import models
+from TestProject.choices import action_types
+
 
 # Create your models here.
-class Invoice(models.Model): # sales
+class Invoice(models.Model):
     invoice_number = models.CharField(max_length=100,unique=True)
     status = models.ForeignKey(CodeTable,on_delete=models.PROTECT)
     company = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="customer")
@@ -31,8 +33,8 @@ class Invoice(models.Model): # sales
     service_type = models.IntegerField()
     packing = models.IntegerField()
     is_invoiced = models.BooleanField(default=False)
-    created_on = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User,on_delete=models.PROTECT)
+    created_on = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(ECUser,on_delete=models.PROTECT)
     last_rem_date = models.DateTimeField()
     remark = models.TextField()
     meta_data = models.CharField(max_length=200,null=True, blank=True)
@@ -65,10 +67,24 @@ class Invoice(models.Model): # sales
     def __str__(self):
         return self.invoice_number
 
+class InvoiceOrder(models.Model):
+    invoice = models.ForeignKey(Invoice,on_delete=models.PROTECT,related_name="invoice")
+    order_numbre = models.IntegerField(null=True,blank=True)
+    order_number = models.CharField(max_length=100,null=True,blank=True)
+    order_unit_value = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    quantity = models.IntegerField(null=True,blank=True)
+    invoice_amount = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    ord_trp_value = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    order_vnit_value_Curr = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    ord_trp_value_curr = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    invoice_amount_curr = models.DecimalField(max_digits=12, decimal_places=3,null=True,blank=True)
+    is_reduce_vat = models.BooleanField(default=False)
+    invoice_ref = models.CharField(max_length=100,null=True,blank=True)
 
-class Scheduler(models.Model): # sales
+
+class Scheduler(models.Model):
     scheduler_name = models.CharField(max_length=200,verbose_name="Scheduler Name")
-    created_on = models.DateTimeField(auto_now_add=True)
+    created_on = models.DateTimeField(auto_now=True)
     is_legal_action = models.BooleanField(default=False)
     status = models.ForeignKey(CodeTable,on_delete=models.PROTECT)
 
@@ -77,17 +93,18 @@ class Scheduler(models.Model): # sales
         return self.scheduler_name
 
 
-class SchedulerItem(models.Model): # sales
+class SchedulerItem(models.Model):
     scheduler = models.ForeignKey(Scheduler,on_delete=models.PROTECT,related_name="scheduler_item")
     invoice = models.ManyToManyField(Invoice,related_name="scheduler_invoice")
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="scheduler_customer",null=True)
     def __str__(self):
         return str(self.scheduler)
 
-class CollectionAction(models.Model): # sales
+class CollectionAction(models.Model):
     scheduler = models.ForeignKey(Scheduler, on_delete=models.PROTECT,related_name="scheduler")
     action_by = models.ForeignKey(User, on_delete=models.PROTECT)
-    action_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="action_type")
+    action_type = models.CharField(max_length=100,choices=action_types)
+    # action_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="action_type")
     action_date = models.DateTimeField(null=True,blank=True)
     summary = models.TextField(blank=True)
     reference = models.CharField(max_length=100, null=True,blank=True)

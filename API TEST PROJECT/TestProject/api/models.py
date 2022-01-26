@@ -1,18 +1,16 @@
 from datetime import datetime
 from uuid import uuid4
 
+from base.models import CodeTable, Currency
 from django.contrib.auth.models import Group, User
 from django.core.files.storage import FileSystemStorage
 from django.db import models
-from base.models import CodeTable,Currency
 from TestProject.util import Util
 
 profile_image_storage = FileSystemStorage()
 # from base.models import *
 
 from TestProject.choices import *
-
-# Create your models here.
 
 
 def get_profile_image_name(instance, filename):
@@ -22,7 +20,7 @@ def get_profile_image_name(instance, filename):
     return newfilename
 
 
-class MainMenu(models.Model):# base
+class MainMenu(models.Model):
     name = models.CharField(max_length=150, verbose_name="Menu name")
     url = models.CharField(max_length=1000, verbose_name="Url")
     icon = models.CharField(max_length=500, verbose_name="Icon")
