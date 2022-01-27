@@ -9,7 +9,7 @@ from datetime import date, datetime
 import pandas as pd
 import requests
 import xlrd
-from base.models import CodeTable
+from base.models import CodeTable, Currency
 from customer.models import Customer
 from dateutil import parser
 from django.core.management.base import BaseCommand
@@ -22,39 +22,43 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         customer_file = pd.read_excel("D:/TnuTaral/Customer.xlsx")
         customer_file = json.loads(customer_file.to_json(orient='records',date_format = 'iso'))
-        print(type(customer_file[0]["LastOrderdate"]))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 10
-        total_records = len(customer_file)
+        length = 1
+        codes = CodeTable.objects.filter().values("id","code")
+        code_ids = get_code_ids("code","id",codes)
+        currencies = Currency.objects.filter().values("id","symbol")
+        currency_symbol = get_code_ids("symbol","id",currencies)
         while True:
             customers = customer_file[start:(start + length)]
+            if len(customers) == 0:
+                break
             customer_data  = []
             for customer in customers:
                 customer_data.append({
                     'ec_customer_id': customer['ecCustomerId'],
                     'company_name': customer['companyName'],
                     'initials': customer['Initials'],
-                    'customer_type': customer['TypeCode'], #codetabel
-                    'tax_number_type': customer['TaxNumberTypeCode'], #codetabel
+                    'customer_type':  code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None,
+                    'tax_number_type': code_ids[customer['TaxNumberTypeCode']] if customer['TaxNumberTypeCode'] in code_ids else None ,
                     'is_always_vat': True if customer['IsAlwaysVAT'] else False,
-                    'status': customer['StatusIdCode'], #codetabel
-                    'account_manager': customer['AccountManagerId'],
+                    'status': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None ,
+                    'account_manager': None ,
                     'is_deleted': True if customer['IsDeleted'] else False,
                     'is_allow_send_mail': True if customer['IsAllowSendMail'] else False,
                     'last_order_date': parser.parse(customer['LastOrderdate']) if customer['LastOrderdate'] else "",
-                    'invoice_lang': customer['InvoiceLangCode'],
+                    'invoice_lang': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None ,
                     'account_number': customer['AccountNumber'],
                     'invoice_prefrence': customer['InvoicePrefrence'],
                     'invoice_postage': customer['InvoicePostage'],
                     'is_sales_review': True if  customer['IsSalesReview'] else False,
                     'is_vat_verified': True if customer['IsVATVerified'] else False,
-                    'currency': customer['CurrencySymbol'],
+                    'currency': currency_symbol[customer['CurrencySymbol']] if customer['CurrencySymbol'] in currency_symbol else None,
                     'is_deliver_invoice_by_post': True if customer['isDeliverInvoiceByPost'] else False,
                     'is_duplicate': True if customer['IsDuplicate'] else False,
                     'is_exclude_vat': True if customer['IsExcludeVAT'] else False,
                     'is_student': True if customer['IsStudent'] else False,
-                    'invoice_delivery': customer['InvoiceDelivery'], #codetabel
+                    'invoice_delivery': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None ,
                     'sa_company_competence': customer['sa_company_competence'],
                     'sa_ec_customer': customer['sa_ec_customer'],
                     'is_peppol_verfied': True if  customer['isPeppolVerfied'] else False,
@@ -65,12 +69,12 @@ class Command(BaseCommand):
                 })
 
             #--------------call API ------------------------
-            print(customer_data,"customer_data")
+
             start += length
             time.sleep(1)
             url = 'http://127.0.0.1:8000/dt/customer/customer/'
             response = requests.post(url, data=json.dumps(customer_data,cls=DateEncoder), headers=headers)
-            # print(response,"response")
+            print(response,"response")
         print("==> data inserted finished")
 
 
@@ -82,3 +86,10 @@ class DateEncoder(json.JSONEncoder):
             return obj.strftime("%Y-%m-%d")
         else:
             return json.JSONEncoder.default(self, obj)
+
+def get_code_ids(key_name, val, records):
+        code_ids = {}
+        for record in records:
+            code_ids[record[key_name]] = record[val]
+
+        return code_ids

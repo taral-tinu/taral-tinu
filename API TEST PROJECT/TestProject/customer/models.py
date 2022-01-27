@@ -12,14 +12,12 @@ class State(models.Model):#customer
     country = models.ForeignKey(Country, null=True, on_delete=models.PROTECT)
     code = models.CharField(max_length=20, verbose_name="Code", null=True, blank=True)
 
-class Contact(models.Model): # customers
+class Contact(models.Model):
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
-    # create_on = models.DateTimeField(auto_now=True)
     job_title = models.CharField(max_length=100, null=True)
     ec_contact_id = models.IntegerField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
-    # responsibility = models.ForeignKey()
 
 
 class Customer(models.Model): # customers
@@ -32,8 +30,8 @@ class Customer(models.Model): # customers
     account_manager = models.ForeignKey(Contact, verbose_name="Account manager", blank=True, null=True, on_delete=models.PROTECT)
     account_number = models.CharField(max_length=30, verbose_name="Account number", null=True, help_text="Number assigned by Accounting")
     initials = models.CharField(max_length=30,null=True, blank=True)
-    customer_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="customer_type")
-    tax_number_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="taxt_number_type")
+    customer_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="customer_type",blank=True, null=True)
+    tax_number_type = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="taxt_number_type",blank=True, null=True)
     vat_no = models.CharField(max_length=100,blank=True, null=True)
     invoice_prefrence = models.CharField(max_length=100,blank=True, null=True)
     invoice_postage = models.CharField(max_length=100,blank=True, null=True)
@@ -42,10 +40,10 @@ class Customer(models.Model): # customers
     sa_company_competence = models.CharField(max_length=500,blank=True, null=True)
     sa_ec_customer = models.CharField(max_length=500,blank=True, null=True)
     peppol_address = models.CharField(max_length=500,blank=True, null=True)
-    status = models.ForeignKey(CodeTable,on_delete=models.PROTECT)
-    last_order_date = models.DateTimeField()
+    status = models.ForeignKey(CodeTable,on_delete=models.PROTECT,blank=True, null=True)
+    last_order_date = models.DateTimeField(blank=True, null=True)
     is_allow_send_mail = models.BooleanField(default=False)
-    invoice_lang = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="invoice_language")
+    invoice_lang = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="invoice_language",blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     is_duplicate = models.BooleanField(default=False)
     is_exclude_vat = models.BooleanField(default=False)
@@ -56,11 +54,11 @@ class Customer(models.Model): # customers
     is_teacher = models.BooleanField(default=False)
     is_student_team = models.BooleanField(default=False)
     is_call_report_attached = models.BooleanField(default=False)
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, verbose_name="Currency", null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, verbose_name="Currency", null=True,blank=True)
     invoice_delivery = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="invoice_delivery",blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return self.company_name
 
 
 
@@ -77,20 +75,19 @@ class ECUser(models.Model): # customers
 
 class Address(models.Model): # customers
     street_name = models.CharField(max_length=100, default="")
+    ec_address_id = models.IntegerField(null=True,blank=True)
     company = models.ForeignKey(Customer, null=True, on_delete=models.PROTECT)
     street_no = models.CharField(max_length=100, default="")
     street_address1 = models.CharField(max_length=300, default="")
     street_address2 = models.CharField(max_length=300, default="")
-    note = models.TextField(null=True, blank=True)
-    zip = models.CharField(max_length=40,null=True, blank=True)
-    contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, blank=True, null=True)
+    postal_code = models.CharField(max_length=40,null=True, blank=True)
     city = models.CharField(max_length=300, null=True, blank=True)
     state = models.ForeignKey(CodeTable, verbose_name="State", null=True, on_delete=models.PROTECT)
-    other_state = models.CharField(max_length=100)
+    other_state = models.CharField(max_length=100,null=True,blank=True)
+    address_name = models.CharField(max_length=200,null=True,blank=True)
+    contact_name = models.CharField(max_length=200,null=True,blank=True)
     country = models.ForeignKey(Country, verbose_name="Country", null=True, on_delete=models.PROTECT)
-    is_primary = models.BooleanField(default=True)
-    # created_by = models.ForeignKey(User,on_delete=models.PROTECT,null=True, blank=True)
-    # created_on = models.DateTimeField(auto_now=True)
+    address_type = models.ForeignKey(CodeTable,null=True, on_delete=models.PROTECT,related_name="address_type")
     email = models.CharField(max_length=200,null=True,blank=True)
     phone = models.CharField(max_length=50,null=True,blank=True)
     fax = models.CharField(max_length=50,null=True,blank=True)

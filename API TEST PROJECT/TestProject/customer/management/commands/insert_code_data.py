@@ -20,32 +20,31 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        contact_file = pd.read_csv("D:/TnuTaral/contacts1.csv")
-        contact_file = json.loads(contact_file.to_json(orient='records',date_format = 'iso'))
-        # print(contact_file,"customer_file")
+        code_file = pd.read_csv("D:/TnuTaral/codes.xlsx")
+        code_file = json.loads(code_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
         length = 1
-        total_records = len(contact_file)
+        total_records = len(code_file)
         while True:
-            contacts = contact_file[start:(start + length)]
-            contact_data  = []
-            for contact in contacts:
-                print(contact,"contact")
-                contact_data.append({
-                    'ec_contact_id': contact['ecContactId'],
-                    'first_name': contact['FirstName'],
-                    'last_name': contact['LastName'],
-                    'job_title': contact['JobTitle'],
-                    'is_deleted': True if contact['IsDeleted'] else False,
+            codes = code_file[start:(start + length)]
+            if len(codes) == 0:
+                    break
+            code_data  = []
+            for code in codes:
+                print(code,"code")
+                code_data.append({
+                    'code': code['Code'],
+                    'name': code['ShortDescription'],
+                    'desc': code['UsageDescription'],
                     })
 
             # #--------------call API ------------------------
-            # print(contact_data,"contact_data")
+            # print(customer_data,"customer_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/contact/'
-            response = requests.post(url, data=json.dumps(contact_data,cls=DateEncoder), headers=headers)
+            url = 'http://127.0.0.1:8000/dt/customer/code/'
+            response = requests.post(url, data=json.dumps(code_data,cls=DateEncoder), headers=headers)
             print(response,"response")
         print("==> data inserted finished")
 
@@ -58,9 +57,3 @@ class DateEncoder(json.JSONEncoder):
             return obj.strftime("%Y-%m-%d")
         else:
             return json.JSONEncoder.default(self, obj)
-
-def get_code_ids(key, val, records):
-        dict = {}
-        for record in records:
-            dict[record[key]] = record[val]
-        return dict

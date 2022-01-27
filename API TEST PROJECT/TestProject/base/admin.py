@@ -1,8 +1,16 @@
 from django.contrib import admin
 
+from .models import CodeTable, Currency
+
 # Register your models here.
 
-from .models import CodeTable,Currency
 
-admin.site.register(CodeTable)
-admin.site.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ["name","symbol"]
+
+class CodeAdmin(admin.ModelAdmin):
+    list_display = ["name","code"]
+
+admin.site.register(CodeTable,CodeAdmin)
+admin.site.register(Currency,CurrencyAdmin)
+

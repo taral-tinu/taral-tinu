@@ -5,10 +5,10 @@ from django.db import models
 
 class CodeTable(models.Model):
     parent = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,null=True,blank=True)
+    code = models.CharField(max_length=100,unique=True)
     desc = models.TextField()
-    is_deleted = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
 
 
 class Currency(models.Model):
