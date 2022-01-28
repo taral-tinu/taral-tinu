@@ -25,13 +25,15 @@ class Command(BaseCommand):
         # print(contact_file,"customer_file")
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
+        length = 10
         total_records = len(contact_file)
         while True:
             contacts = contact_file[start:(start + length)]
+            if len(contacts) == 0:
+                    break
             contact_data  = []
             for contact in contacts:
-                print(contact,"contact")
+                # print(contact,"contact")
                 contact_data.append({
                     'ec_contact_id': contact['ecContactId'],
                     'first_name': contact['FirstName'],

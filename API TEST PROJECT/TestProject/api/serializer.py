@@ -75,16 +75,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    # invoice_date = LocalDateTime(required=True,source="invoice_created_on")
-    # invoice_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="outstanding_amount")
-    # invoice_paid = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
-    # # currency_outstanding_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
-    # invoice_status = serializers.CharField(source="status")
-    # company_id = serializers.IntegerField(write_only=True)
+    invoice_date = LocalDateTime(required=True,source="invoice_created_on")
+    invoice_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="outstanding_amount")
+    paid_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
+    # currency_outstanding_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
+    invoice_status = serializers.CharField(source="status__name")
+    company_id = serializers.IntegerField(write_only=True)
     class Meta:
         model = Invoice
-        fields = "__all__"
-        # fields =["invoice_number","invoice_amount","invoice_paid","invoice_date","invoice_due_date","invoice_status","company_id"]
+        # fields = "__all__"
+        fields =["invoice_number","invoice_amount","paid_amount","invoice_date","invoice_due_date","invoice_status","company_id"]
 
 
 class SchedulerDetailSerializer(serializers.ModelSerializer):
@@ -123,14 +123,19 @@ class SchdulerSerializer(serializers.ModelSerializer):
 
 class ActionSerializer(serializers.ModelSerializer):
     scheduler_name = serializers.CharField(source="scheduler.scheduler_name",read_only=True)
-    created_by = serializers.CharField(source="action_by.username",read_only=True)
+    created_by = serializers.CharField(source="action_by__username",read_only=True)
     action_date = LocalDateTime(required=False)
     # action_type = serializers.CharField(source="action_type",write_only=True)
     # next_action_date = LocalDateTime(required=False)
+    attachment = serializers.CharField(read_only=True)
 
     class Meta:
         model = CollectionAction
-        fields = ["id","scheduler_name","scheduler","created_by","action_by","action_type","action_date","reference","summary"]
+        fields = ["id","scheduler_name","scheduler","created_by","action_by","action_type","action_date","reference","summary","attachment"]
+        extra_kwargs = {
+            'scheduler': {'write_only': True},
+            'action_by': {'write_only': True},
+        }
 
     # def create(self,validate_data):
     #     scheduler= validate_data.get("scheduler")

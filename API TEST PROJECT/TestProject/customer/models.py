@@ -63,11 +63,11 @@ class Customer(models.Model): # customers
 
 
 class ECUser(models.Model): # customers
-    company = models.ForeignKey(Customer,on_delete=models.PROTECT)
-    username = models.CharField(max_length=200)
-    password = models.CharField(max_length=200)
-    contact = models.ForeignKey(Contact, on_delete=models.PROTECT)
-    language = models.ForeignKey(CodeTable, on_delete=models.PROTECT)
+    company = models.ForeignKey(Customer,on_delete=models.PROTECT,null=True,blank=True)
+    username = models.CharField(max_length=200,null=True,blank=True)
+    password = models.CharField(max_length=200,null=True,blank=True)
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT,null=True,blank=True)
+    language = models.ForeignKey(CodeTable, on_delete=models.PROTECT,null=True,blank=True)
     is_power_user = models.BooleanField(default=False)
     is_deleted =  models.BooleanField(default=False)
     is_active =  models.BooleanField(default=False)

@@ -10,7 +10,7 @@ import pandas as pd
 import requests
 import xlrd
 from base.models import CodeTable, Currency
-from customer.models import Customer
+from customer.models import Contact, Customer
 from dateutil import parser
 from django.core.management.base import BaseCommand
 from django.http import response
@@ -20,17 +20,20 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        customer_file = pd.read_excel("D:/TnuTaral/Customer.xlsx")
+        customer_file = pd.read_excel("D:/TnuTaral/customers1.xlsx")
         customer_file = json.loads(customer_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
+        length = 10
         codes = CodeTable.objects.filter().values("id","code")
-        code_ids = get_code_ids("code","id",codes)
+        code_ids = get_dict("code","id",codes)
         currencies = Currency.objects.filter().values("id","symbol")
-        currency_symbol = get_code_ids("symbol","id",currencies)
+        currency_symbol = get_dict("symbol","id",currencies)
         while True:
             customers = customer_file[start:(start + length)]
+            ec_contact_ids = [x["AccountManagerId"] for x in customers]
+            contacts = Contact.objects.filter(ec_contact_id__in=ec_contact_ids).values("id","ec_contact_id")
+            contact_ids = get_dict("ec_contact_id","id",contacts)
             if len(customers) == 0:
                 break
             customer_data  = []
@@ -43,11 +46,11 @@ class Command(BaseCommand):
                     'tax_number_type': code_ids[customer['TaxNumberTypeCode']] if customer['TaxNumberTypeCode'] in code_ids else None ,
                     'is_always_vat': True if customer['IsAlwaysVAT'] else False,
                     'status': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None ,
-                    'account_manager': None ,
+                    'account_manager': contact_ids[customer['AccountManagerId']] if customer['AccountManagerId'] in contact_ids else None,
                     'is_deleted': True if customer['IsDeleted'] else False,
                     'is_allow_send_mail': True if customer['IsAllowSendMail'] else False,
-                    'last_order_date': parser.parse(customer['LastOrderdate']) if customer['LastOrderdate'] else "",
-                    'invoice_lang': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None ,
+                    'last_order_date': parser.parse(customer['LastOrderdate']) if customer['LastOrderdate'] else None,
+                    'invoice_lang': code_ids[customer['TypeCode']] if customer['TypeCode'] in code_ids else None,
                     'account_number': customer['AccountNumber'],
                     'invoice_prefrence': customer['InvoicePrefrence'],
                     'invoice_postage': customer['InvoicePostage'],
@@ -74,7 +77,7 @@ class Command(BaseCommand):
             time.sleep(1)
             url = 'http://127.0.0.1:8000/dt/customer/customer/'
             response = requests.post(url, data=json.dumps(customer_data,cls=DateEncoder), headers=headers)
-            print(response,"response")
+            print(response,"response",start)
         print("==> data inserted finished")
 
 
@@ -87,7 +90,7 @@ class DateEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
-def get_code_ids(key_name, val, records):
+def get_dict(key_name, val, records):
         code_ids = {}
         for record in records:
             code_ids[record[key_name]] = record[val]

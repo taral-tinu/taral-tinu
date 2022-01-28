@@ -26,7 +26,9 @@ class Command(BaseCommand):
         start = 0
         length = 1
         countries = Country.objects.filter().values("id","code")
-        country_ids = get_code_ids("code","id",countries)
+        country_ids = get_dict("code","id",countries)
+        codes = CodeTable.objects.filter().values("id","code")
+        code_ids = get_dict("code","id",codes)
         while True:
             addresses = address_file[start:(start + length)]
             if len(addresses) == 0:
@@ -34,29 +36,29 @@ class Command(BaseCommand):
             addresses_data  = []
             for address in addresses:
                 print(address,"code")
-                # addresses_data.append({
-                #     'company': address['companyId'],
-                #     'street_name': address['StreetName'],
-                #     'street_no': address['StreetNo'],
-                #     'street_address1': address['StreetAddress1'],
-                #     'street_address2': address['StreetAddress2'],
-                #     'city': address['City'],
-                #     'postal_code': address['PostalCode'],
-                #     'state': address['StateId'],
-                #     'other_state': address['OtherState'],
-                #     'country': address['CountryCode'],
-                #     'address_type': address['AddressTypeCode'],
-                #     'is_deleted': address['IsDeleted'],
-                #     'address_name': address['AddressName'],
-                #     'contact_name': address['ContactName'],
-                #     'box_no': address['BoxNo'],
-                #     'is_primary': address['isPrimary'],
-                #     'email': address['email'],
-                #     'phone': address['Phone'],
-                #     'fax': address['Fax'],
+                addresses_data.append({
+                    'ec_address_id': address['companyId'],
+                    'street_name': address['StreetName'],
+                    'street_no': address['StreetNo'],
+                    'street_address1': address['StreetAddress1'],
+                    'street_address2': address['StreetAddress2'],
+                    'city': address['City'],
+                    'postal_code': address['PostalCode'],
+                    'state': address['StateId'],
+                    'other_state': address['OtherState'],
+                    # 'country': country_ids[address['AddressTypeCode']] if address['AddressTypeCode'] in country_ids else None,#address['CountryCode'],
+                    'address_type': codes[address['AddressTypeCode']] if address['AddressTypeCode'] in codes else None,
+                    'is_deleted': address['IsDeleted'],
+                    'address_name': address['AddressName'],
+                    'contact_name': address['ContactName'],
+                    'box_no': address['BoxNo'],
+                    'is_primary': address['isPrimary'],
+                    'email': address['email'],
+                    'phone': address['Phone'],
+                    'fax': address['Fax'],
 
 
-                #     })
+                    })
 
             # #--------------call API ------------------------
             # print(customer_data,"customer_data")
@@ -77,7 +79,7 @@ class DateEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
-def get_code_ids(key, val, records):
+def get_dict(key, val, records):
         dict = {}
         for record in records:
             dict[record[key]] = record[val]

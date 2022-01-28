@@ -376,7 +376,7 @@ class SchedulerDetailView(generics.RetrieveAPIView):
             .values("id","scheduler_name","scheduler_item__customer__id","created_on")
             .annotate(
                 total_invoices = Count("scheduler_item__invoice"),
-                customer = Window(expression=FirstValue("scheduler_item__customer__name")),
+                customer = Window(expression=FirstValue("scheduler_item__customer__company_name")),
                 # total_reminders= Count("scheduler_item__customer__id",distinct=True),
                 invoices_amount = Sum("scheduler_item__invoice__outstanding_amount"),
                 total_paid_amount= Sum("scheduler_item__invoice__currency_outstanding_amount"),
@@ -389,7 +389,6 @@ class SchedulerDetailView(generics.RetrieveAPIView):
 
 class CustomerInvoice(generics.ListAPIView):
     serializer_class = InvoiceSerializer
-    tmz = timezone.get_current_timezone_name()
     def get_queryset(self):
         query = Q()
         customer_id = self.request.data.get("customer_id")
@@ -397,7 +396,7 @@ class CustomerInvoice(generics.ListAPIView):
             query.add(Q(company_id=customer_id),query.connector)
         queryset = (Invoice.objects.filter(query).values(
             "invoice_number",
-            "status",
+            "status__name",
             "outstanding_amount",
             "currency_outstanding_amount",
             "invoice_created_on",
@@ -435,7 +434,17 @@ class CustomerReminder(generics.ListAPIView):
 
 
 class ActionView(viewsets.ModelViewSet):
-    queryset = CollectionAction.objects.all()
+    # queryset = CollectionAction.objects.all()
+    queryset = (CollectionAction.objects.filter().values(
+        "id",
+        "action_by_id",
+        "action_by",
+        "action_by__username",
+        "action_type",
+        "action_date",
+        "summary",
+        "reference",
+        ))
     serializer_class = ActionSerializer
     pagination_class = CustomPagination
 
