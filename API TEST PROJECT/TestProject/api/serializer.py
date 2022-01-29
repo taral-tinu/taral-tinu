@@ -80,11 +80,12 @@ class InvoiceSerializer(serializers.ModelSerializer):
     paid_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
     # currency_outstanding_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="currency_outstanding_amount")
     invoice_status = serializers.CharField(source="status__name")
-    company_id = serializers.IntegerField(write_only=True)
+    # customer_type = serializers.CharField(source="company__customer_type")
+    # company_id = serializers.IntegerField(write_only=True)
     class Meta:
         model = Invoice
         # fields = "__all__"
-        fields =["invoice_number","invoice_amount","paid_amount","invoice_date","invoice_due_date","invoice_status","company_id"]
+        fields =["invoice_number","invoice_amount","paid_amount","invoice_date","invoice_due_date","invoice_status"]
 
 
 class SchedulerDetailSerializer(serializers.ModelSerializer):
@@ -92,14 +93,14 @@ class SchedulerDetailSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer",read_only=True)
     total_reminder = serializers.IntegerField(source="total_reminders",read_only=True)
     invoice_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="invoices_amount",read_only=True)
-    total_paid = serializers.DecimalField(max_digits=12,decimal_places=4,source="total_paid_amount",read_only=True)
+    paid_amount = serializers.DecimalField(max_digits=12,decimal_places=4,source="total_paid_amount",read_only=True)
     customer = serializers.CharField(source="scheduler_item__invoice__company__name",read_only=True)
     created_on = LocalDateTime(read_only=True)
     last_reminder = LocalDateTime(read_only=True)
 
     class Meta:
         model = Scheduler
-        fields = ["id","scheduler_name","customer_name","total_invoice","total_reminder","invoice_amount","total_paid","customer","created_on","last_reminder"]
+        fields = ["id","scheduler_name","customer_name","total_invoice","total_reminder","invoice_amount","paid_amount","customer","created_on","last_reminder"]
 
 class SchdulerItemSerializer(serializers.ModelSerializer):
     invoice = InvoiceSerializer(many=True)
@@ -110,15 +111,15 @@ class SchdulerItemSerializer(serializers.ModelSerializer):
 class SchdulerSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer",read_only=True)
     total_invoice = serializers.IntegerField(source="total_invoices",read_only=True)
-    total_reminder = serializers.IntegerField(source="total_reminders",read_only=True)
+    # total_reminder = serializers.IntegerField(source="total_reminders",read_only=True)
     created_on = LocalDateTime()
     # next_action_date =  LocalDateTime(read_only=True)
-    scheduler = SchdulerItemSerializer(many=True,source="scheduler_item")
+    # scheduler = SchdulerItemSerializer(many=True,source="scheduler_item")
     # legal_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Scheduler
-        fields = ["id","scheduler_name","customer_name","total_reminder","total_invoice","created_on","scheduler"]
+        fields = ["id","scheduler_name","customer_name","total_invoice","created_on"]
 
 
 class ActionSerializer(serializers.ModelSerializer):

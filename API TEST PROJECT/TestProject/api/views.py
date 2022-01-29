@@ -19,6 +19,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from sales.models import *
+from rest_framework.response import Response
 # from finance_api.finance_api import util
 from TestProject.rest_config import APIResponse, CustomPagination
 from TestProject.util import Util
@@ -255,19 +256,15 @@ class UserRole(viewsets.ViewSet):
 
 class CollectionActionView(viewsets.ModelViewSet):
     serializer_class = SchdulerSerializer
-    pagination_class = CustomPagination
     filterset_class = CollectionActionFilter
+    pagination_class = CustomPagination
+    
 
     def get_queryset(self):
         query = Q()
-        customer_id = self.request.data.get("customer_id")
-        status = self.request.data.get("status")
+        status = self.request.GET.get("status")
         if status:
             query.add(Q(status__code=status),query.connector)
-        if customer_id:
-            query.add(Q(scheduler_item__invoice__company__id=customer_id),query.connector)
-        else:
-            query.add(~Q(status__code="legal_action"),query.connector)
         query.add(Q(scheduler_item__isnull=False),query.connector)
         queryset = (Scheduler.objects
         .prefetch_related("scheduler_item")
@@ -275,19 +272,19 @@ class CollectionActionView(viewsets.ModelViewSet):
         .annotate(
             total_invoices = Count("scheduler_item__invoice",distinct=True),
             total_reminders = Count("scheduler__id", distinct=True),
-            customer = F("scheduler_item__invoice__company__name"),
+            customer = F("scheduler_item__customer__company_name"),
             # next_action_date =Case(When(~Q(status="pending"),then=F("scheduler__next_action_date")))
             # next_action_date = Window(expression=FirstValue("scheduler__next_action_date")),
-            # legal_status =Case(When(Q(is_legal_action=True),then=F("status")))
+            # legal_status = Case(When(Q(is_legal_action=True),then=F("status")))
         )
         .exclude(is_legal_action=True)
-        .distinct())
+        .distinct())        
         return queryset
 
     @action(detail=True, methods=['post'])
     def sent_to_legal_action(self,request):
         scheduler_id = request.data.get("scheduler_id")
-        Scheduler.objects.filter(id=scheduler_id).update(status="legal_action",is_legal_action=True)
+        Scheduler.objects.filter(id=scheduler_id).update(is_legal_action=True)
         return APIResponse(code=1,message="Reminder has been sent to legal action !")
 
     @action(detail=False, methods=['post'])
@@ -296,44 +293,90 @@ class CollectionActionView(viewsets.ModelViewSet):
         Scheduler.objects.filter(id=scheduler_id).update(status="finished")
         return APIResponse(code=1,message="Reminder deleted")
 
-    @action(detail=False, methods=['post'])
-    def customer_details(self,request):
-        scheduler_id = request.data.get("scheduler_id")
+    @action(detail=True, methods=['get'])
+    def customer_details(self,request,pk=None):
+        # scheduler_id = self.request.data.get("scheduler_id")
         object_set = (Scheduler.objects
-            .filter(id=scheduler_id)
-            .select_related("SchedulerItem")
-            .values("id","scheduler_name","scheduler_item__invoice__company__name","created_on")
+            .filter(id=pk)
+            .prefetch_related("SchedulerItem")
+            .values("id","scheduler_name","scheduler_item__customer__id","created_on")
             .annotate(
-                total_invoices = Count("scheduler_item__invoice",distinct=True),
+                total_invoices = Count("scheduler_item__invoice"),
+                customer = Window(expression=FirstValue("scheduler_item__customer__company_name")),
+                # total_reminders= Count("scheduler_item__customer__id",distinct=True),
                 invoices_amount = Sum("scheduler_item__invoice__outstanding_amount"),
                 total_paid_amount= Sum("scheduler_item__invoice__currency_outstanding_amount"),
-                total_reminders= Count("scheduler__id", distinct=True),)
+            )
             .first()
-                )
+              )
         serializer = SchedulerDetailSerializer(object_set)
+        # page = self.paginate_queryset(supplements)
+        # if page is not None:
+        #     serializer = self.get_serializer(page, many=True)
+        #     return self.get_paginated_response(serializer.data)
+
+        # serializer = self.get_serializer(page, many=True)
+        # result_set = serializer.data
         return APIResponse(serializer.data)
+    
+    @action(detail=True, methods=['get',"list"])
+    def invoice_details(self,request,pk=None):
+        query = Q()
+        # customer_id = self.request.data.get("customer_id")
+        print(pk)
+        if pk is not None:
+            print(pk)
+            query.add(Q(scheduler_invoice__scheduler_id=pk),query.connector)
+        queryset = (Invoice.objects.select_related("scheduler_invoice")
+            .filter(query)
+            .values(
+            "invoice_number",
+            "status__name",
+            "outstanding_amount",
+            "currency_outstanding_amount",
+            "invoice_created_on",
+            "invoice_due_date",
+            "company__company_name",
+        ))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = InvoiceSerializer(page,many=True)
+            return self.get_paginated_response(serializer.data)
 
-        # def get_queryset(self):
-    #     query = Q()
-    #     customer_id = self.request.data.get("customer_id")
-    #     status = self.request.data.get("status")
-    #     if status:
-    #         query.add(Q(status=status),query.connector)
-    #     if customer_id:
-    #         query.add(Q(scheduler_item__invoice__company__id=customer_id),query.connector)
-    #     query.add(Q(scheduler_item__isnull=False),query.connector)
-    #     queryset = (Scheduler.objects
-    #     .prefetch_related("scheduler_item")
-    #     .filter(query)
-    #     .annotate(
-    #         total_invoices = Count("scheduler_item__invoice",distinct=True),
-    #         total_reminders = Count("scheduler__id", distinct=True),
-    #         # customer = F("scheduler_item__invoice__company__name"),
-    #         # next_action_date =F("scheduler__next_action_date"),
+        serializer = InvoiceSerializer(queryset,many=True)
+        return APIResponse(serializer.data)
+    
+    @action(detail=True, methods=['get',"list"])
+    def reminders(self,request,pk=None):
+        query = Q()
+        customer_id = self.request.data.get("customer_id")
+        if customer_id is not None:
+            query.add(Q(customer_id=customer_id),query.connector)
+        query.add(Q(scheduler_item__isnull=False),query.connector)
+        queryset = (Scheduler.objects
+        .select_related("SchedulerItem")
+        .filter(query)
+        .values(
+        "id",
+        "scheduler_name",
+        "created_on",
+        "scheduler_item__customer__company_name"
+        )
+        .annotate(
+            total_invoices = Count("scheduler_item__invoice",distinct=True),
+            total_reminders = Count("scheduler__id",distinct=True)
+        )
+        .distinct())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            print("MMMMMMMMMMMMMMM")
+            serializer = SchdulerSerializer(page,many=True)
+            # serializer = self.get_serializer(page,many=True)
+            return self.get_paginated_response(serializer.data)
 
-    #     )
-    #     .distinct())
-    #     return queryset
+        # serializer = self.get_serializer(page, many=True)
+        serializer = SchdulerSerializer(queryset,many=True)
+        return APIResponse(serializer.data)
 
 
 class LegalActionView(viewsets.ModelViewSet):
@@ -387,9 +430,10 @@ class SchedulerDetailView(generics.RetrieveAPIView):
         object_set["last_reminder"] = SchedulerItem.objects.filter(customer__id=object_set["scheduler_item__customer__id"]).values("scheduler__created_on").last()["scheduler__created_on"]
         return object_set
 
-class CustomerInvoice(generics.ListAPIView):
+class InvoiceView(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     def get_queryset(self):
+        print("KKKK")
         query = Q()
         customer_id = self.request.data.get("customer_id")
         if customer_id is not None:
@@ -401,9 +445,38 @@ class CustomerInvoice(generics.ListAPIView):
             "currency_outstanding_amount",
             "invoice_created_on",
             "invoice_due_date",
-            "company__name"
+            "company__company_name",
+            "company__customer_type",
+            
         ))
         return queryset
+    
+    @action(detail=True,methods=["get","list"])
+    def customer_invoice(self,request,pk=None):
+        query = Q()
+        customer_id = self.request.data.get("customer_id")
+        if customer_id is not None:
+            query.add(Q(scheduler_item__schdeluer_id=pk),query.connector)
+        queryset = (Invoice.objects.select_related("scheduler_item")
+            .filter(query)
+            .values(
+            "invoice_number",
+            "status__name",
+            "outstanding_amount",
+            "currency_outstanding_amount",
+            "invoice_created_on",
+            "invoice_due_date",
+            "company__company_name"
+        ))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            # serializer = InvoiceSerializer(queryset,many=True)
+            serializer = self.get_serializer(page,many=True)
+            return APIResponse(serializer.data)
+
+        # serializer = self.get_serializer(page, many=True)
+        serializer = InvoiceSerializer(queryset,many=True)
+        return APIResponse(serializer.data)
 
 class CustomerReminder(generics.ListAPIView):
     serializer_class = SchdulerSerializer
@@ -421,7 +494,7 @@ class CustomerReminder(generics.ListAPIView):
         "id",
         "scheduler_name",
         "created_on",
-        "scheduler_item__invoice__company__name"
+        "scheduler_item__customer__company_name"
         )
         .annotate(
             total_invoices = Count("scheduler_item__invoice",distinct=True),
@@ -486,37 +559,37 @@ class UpdateActionView(generics.UpdateAPIView):
     queryset = CollectionAction.objects.filter(is_deleted=False)
     serializer_class = ActionSerializer
 
-class CreateActionView(generics.CreateAPIView):
-    queryset = CollectionAction.objects.all()
-    serializer_class = ActionSerializer
-    def create(self, request):
-        f_action = request.data.get("first_action")
-        next_action = request.data.get("second_action")
-        new_records = []
-        if f_action:
-            f_action = ast.literal_eval(f_action)
-            new_records.append(CollectionAction(
-                scheduler_id=f_action["scheduler_id"],
-                action_by_id=f_action["action_by_id"],
-                action_type=f_action["action_type"],
-                action_date=f_action["action_date"],
-                summary=f_action["summary"],
-                reference=f_action["reference"],
-                status=f_action["status"]
-            ))
-        if next_action:
-            next_action = ast.literal_eval(next_action)
-            new_records.append(CollectionAction(
-                scheduler_id=next_action["scheduler_id"],
-                action_by_id=next_action["action_by_id"],
-                action_type=next_action["action_type"],
-                action_date=next_action["action_date"],
-                summary=next_action["summary"],
-                reference=next_action["reference"],
-                status=next_action["status"]
-            ))
-        CollectionAction.objects.bulk_create(new_records)
-        return APIResponse(code=1,message="Action created")
+# class CreateActionView(generics.CreateAPIView):
+#     queryset = CollectionAction.objects.all()
+#     serializer_class = ActionSerializer
+#     def create(self, request):
+#         f_action = request.data.get("first_action")
+#         next_action = request.data.get("second_action")
+#         new_records = []
+#         if f_action:
+#             f_action = ast.literal_eval(f_action)
+#             new_records.append(CollectionAction(
+#                 scheduler_id=f_action["scheduler_id"],
+#                 action_by_id=f_action["action_by_id"],
+#                 action_type=f_action["action_type"],
+#                 action_date=f_action["action_date"],
+#                 summary=f_action["summary"],
+#                 reference=f_action["reference"],
+#                 status=f_action["status"]
+#             ))
+#         if next_action:
+#             next_action = ast.literal_eval(next_action)
+#             new_records.append(CollectionAction(
+#                 scheduler_id=next_action["scheduler_id"],
+#                 action_by_id=next_action["action_by_id"],
+#                 action_type=next_action["action_type"],
+#                 action_date=next_action["action_date"],
+#                 summary=next_action["summary"],
+#                 reference=next_action["reference"],
+#                 status=next_action["status"]
+#             ))
+#         CollectionAction.objects.bulk_create(new_records)
+#         return APIResponse(code=1,message="Action created")
 
 
 #================== return scheduler data =====================#
@@ -526,9 +599,9 @@ class SchedulerView(viewsets.ModelViewSet):
     serializer_class = CreateSchedulerSerializer
     pagination_class = CustomPagination
 
-class InvoiceView(viewsets.ModelViewSet):
-    queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializer
+# class InvoiceView(viewsets.ModelViewSet):
+#     queryset = Invoice.objects.all()
+#     serializer_class = InvoiceSerializer
 
 
 

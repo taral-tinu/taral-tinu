@@ -10,11 +10,12 @@ from TestProject.util import Util
 
 
 class CustomPagination(pagination.PageNumberPagination):
-    page_size = 5
+    page_size = 1
     page_size_query_param = 'page_size'
     page_query_param = 'page'
 
     def get_paginated_response(self, data):
+        # print("PPPPPP")
         return Response({
             'totalRecords': self.page.paginator.count,
             'data': data
@@ -24,16 +25,20 @@ class CustomPagination(pagination.PageNumberPagination):
 class APIResponse(Response):
 
     def __init__(self, data="", code=1, message=""):
+        print('IIIIIIIII')
         super().__init__({'code':code, 'data':data,'message':message})
 
 
 def custom_exception_handler(exc, context):
+    print("CCCCC")
+    
     # Call REST framework's default exception handler first,
     # to get the standard error response.
     response = exception_handler(exc, context)
 
     # Now add the HTTP status code to the response.
     if response is not None:
+        print("RRRRR")
         response.data['status_code'] = response.status_code
         response.data['code'] = 0
         response.data['message'] = "Error occurred"
