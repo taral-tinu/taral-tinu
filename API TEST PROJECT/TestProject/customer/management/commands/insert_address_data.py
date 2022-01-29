@@ -20,7 +20,7 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        address_file = pd.read_csv("D:/TnuTaral/addresses.csv")
+        address_file = pd.read_excel("D:/TnuTaral/adrs.xlsx")
         address_file = json.loads(address_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
@@ -31,22 +31,26 @@ class Command(BaseCommand):
         code_ids = get_dict("code","id",codes)
         while True:
             addresses = address_file[start:(start + length)]
+            ec_company_ids = [x["eccompanyId"] for x in addresses]
+            customers = Customer.objects.filter(ec_customer_id__in=ec_company_ids).values("id","ec_customer_id")
+            customer_ids = get_dict("ec_customer_id","id",customers)
             if len(addresses) == 0:
                     break
             addresses_data  = []
             for address in addresses:
                 print(address,"code")
                 addresses_data.append({
-                    'ec_address_id': address['companyId'],
-                    'street_name': address['StreetName'],
-                    'street_no': address['StreetNo'],
-                    'street_address1': address['StreetAddress1'],
-                    'street_address2': address['StreetAddress2'],
+                    'ec_address_id': address['ecAddressId'],
+                    'company_id': customer_ids[address['eccompanyId']] if address['eccompanyId'] in customer_ids else None,
+                    'street_name': address['StreetName'] if address['StreetName'] else "",
+                    'street_no': address['StreetNo'] if address['StreetNo'] else "",
+                    'street_address1': address['StreetAddress1'] if address['StreetAddress1'] else "",
+                    'street_address2': address['StreetAddress2'] if address['StreetAddress2'] else "",
                     'city': address['City'],
                     'postal_code': address['PostalCode'],
-                    'state': address['StateId'],
+                    'state': address['StateId'] if address['StateId'] else None,
                     'other_state': address['OtherState'],
-                    # 'country': country_ids[address['AddressTypeCode']] if address['AddressTypeCode'] in country_ids else None,#address['CountryCode'],
+                    'country': country_ids[address['CountryCode']] if address['CountryCode'] in country_ids else None,#address['CountryCode'],
                     'address_type': codes[address['AddressTypeCode']] if address['AddressTypeCode'] in codes else None,
                     'is_deleted': address['IsDeleted'],
                     'address_name': address['AddressName'],
@@ -61,12 +65,12 @@ class Command(BaseCommand):
                     })
 
             # #--------------call API ------------------------
-            # print(customer_data,"customer_data")
+            print(addresses_data,"addresses_data")
             start += length
             time.sleep(1)
-            # url = 'http://127.0.0.1:8000/dt/customer/address/'
-            # response = requests.post(url, data=json.dumps(addresses_data,cls=DateEncoder), headers=headers)
-            # print(response,"response")
+            url = 'http://127.0.0.1:8000/dt/customer/address/'
+            response = requests.post(url, data=json.dumps(addresses_data,cls=DateEncoder), headers=headers)
+            print(response,"response")
         print("==> data inserted finished")
 
 

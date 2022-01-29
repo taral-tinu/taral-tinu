@@ -2,7 +2,7 @@ invoice_status = (
     ("pending","Pending"),
 )
 
-action_status = (
+scheduler_status = (
    ("pending","Pending"),
    ("call_due","Call due"),
    ("call_done","Call done"),

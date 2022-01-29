@@ -9,6 +9,7 @@ router = DefaultRouter(trailing_slash=True)
 router.register(r"customer",CustomerView,basename="customer")
 router.register(r"contact",ContactView,basename="contact")
 router.register(r"user",ECUserView,basename="user")
+router.register(r"address",AddressView,basename="address")
 router.register(r"code",CodeView,basename="code")
 
 

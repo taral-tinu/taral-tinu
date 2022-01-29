@@ -19,7 +19,6 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from sales.models import *
-from rest_framework.response import Response
 # from finance_api.finance_api import util
 from TestProject.rest_config import APIResponse, CustomPagination
 from TestProject.util import Util
@@ -258,11 +257,13 @@ class CollectionActionView(viewsets.ModelViewSet):
     serializer_class = SchdulerSerializer
     filterset_class = CollectionActionFilter
     pagination_class = CustomPagination
-    
+
 
     def get_queryset(self):
         query = Q()
         status = self.request.GET.get("status")
+        status = self.request.GET.get("status")
+        print(status,"status")
         if status:
             query.add(Q(status__code=status),query.connector)
         query.add(Q(scheduler_item__isnull=False),query.connector)
@@ -278,7 +279,7 @@ class CollectionActionView(viewsets.ModelViewSet):
             # legal_status = Case(When(Q(is_legal_action=True),then=F("status")))
         )
         .exclude(is_legal_action=True)
-        .distinct())        
+        .distinct())
         return queryset
 
     @action(detail=True, methods=['post'])
@@ -318,7 +319,7 @@ class CollectionActionView(viewsets.ModelViewSet):
         # serializer = self.get_serializer(page, many=True)
         # result_set = serializer.data
         return APIResponse(serializer.data)
-    
+
     @action(detail=True, methods=['get',"list"])
     def invoice_details(self,request,pk=None):
         query = Q()
@@ -345,7 +346,7 @@ class CollectionActionView(viewsets.ModelViewSet):
 
         serializer = InvoiceSerializer(queryset,many=True)
         return APIResponse(serializer.data)
-    
+
     @action(detail=True, methods=['get',"list"])
     def reminders(self,request,pk=None):
         query = Q()
@@ -433,7 +434,6 @@ class SchedulerDetailView(generics.RetrieveAPIView):
 class InvoiceView(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     def get_queryset(self):
-        print("KKKK")
         query = Q()
         customer_id = self.request.data.get("customer_id")
         if customer_id is not None:
@@ -447,10 +447,10 @@ class InvoiceView(viewsets.ModelViewSet):
             "invoice_due_date",
             "company__company_name",
             "company__customer_type",
-            
+
         ))
         return queryset
-    
+
     @action(detail=True,methods=["get","list"])
     def customer_invoice(self,request,pk=None):
         query = Q()
@@ -520,6 +520,8 @@ class ActionView(viewsets.ModelViewSet):
         ))
     serializer_class = ActionSerializer
     pagination_class = CustomPagination
+
+    # def
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))

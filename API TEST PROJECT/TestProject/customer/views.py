@@ -41,7 +41,7 @@ class AddressView(viewsets.ModelViewSet):
         # print(request.data,"address")
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
         serializer.is_valid(raise_exception=True)
-        # self.perform_create(serializer)
+        self.perform_create(serializer)
         return APIResponse(code=0,message="data inserted")
 
 

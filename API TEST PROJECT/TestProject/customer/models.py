@@ -20,13 +20,9 @@ class Contact(models.Model):
     is_deleted = models.BooleanField(default=False)
 
 
-class Customer(models.Model): # customers
+class Customer(models.Model):
     ec_customer_id = models.IntegerField(null=True, blank=True, verbose_name="EC customer Id")
     company_name = models.CharField(max_length=200, default="")
-    # email = models.EmailField(null=True)
-    # contact_person = models.CharField(max_length=200, default="")
-    # contact_number = models.CharField(max_length=200, default="")
-    # country = models.ForeignKey(Country, on_delete=models.PROTECT, verbose_name="Country", null=True)
     account_manager = models.ForeignKey(Contact, verbose_name="Account manager", blank=True, null=True, on_delete=models.PROTECT)
     account_number = models.CharField(max_length=30, verbose_name="Account number", null=True, help_text="Number assigned by Accounting")
     initials = models.CharField(max_length=30,null=True, blank=True)
@@ -62,7 +58,7 @@ class Customer(models.Model): # customers
 
 
 
-class ECUser(models.Model): # customers
+class User(models.Model):
     company = models.ForeignKey(Customer,on_delete=models.PROTECT,null=True,blank=True)
     username = models.CharField(max_length=200,null=True,blank=True)
     password = models.CharField(max_length=200,null=True,blank=True)
@@ -71,15 +67,15 @@ class ECUser(models.Model): # customers
     is_power_user = models.BooleanField(default=False)
     is_deleted =  models.BooleanField(default=False)
     is_active =  models.BooleanField(default=False)
-    # sa_user_responsibilities = models.TextField()
+    sa_user_responsibilities = models.TextField(null=True,blank=True)
 
-class Address(models.Model): # customers
+class Address(models.Model):
     street_name = models.CharField(max_length=100, default="")
     ec_address_id = models.IntegerField(null=True,blank=True)
     company = models.ForeignKey(Customer, null=True, on_delete=models.PROTECT)
     street_no = models.CharField(max_length=100, default="")
-    street_address1 = models.CharField(max_length=300, default="")
-    street_address2 = models.CharField(max_length=300, default="")
+    street_address1 = models.CharField(max_length=300, default="",blank=True)
+    street_address2 = models.CharField(max_length=300, default="",blank=True)
     postal_code = models.CharField(max_length=40,null=True, blank=True)
     city = models.CharField(max_length=300, null=True, blank=True)
     state = models.ForeignKey(CodeTable, verbose_name="State", null=True, on_delete=models.PROTECT)
