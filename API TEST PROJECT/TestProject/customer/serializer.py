@@ -3,7 +3,8 @@ from dataclasses import fields
 from base.models import CodeTable
 from rest_framework import serializers
 
-from customer.models import Address, Contact, Customer, ECUser
+from customer.models import Address, Contact, Customer
+from customer.models import User as ECUser
 
 
 class CustomerSerializer(serializers.ModelSerializer):

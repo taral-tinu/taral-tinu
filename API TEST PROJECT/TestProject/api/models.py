@@ -1,17 +1,10 @@
-from datetime import datetime
 from uuid import uuid4
-
-from base.models import CodeTable, Currency
 from django.contrib.auth.models import Group, User
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from TestProject.util import Util
 
 profile_image_storage = FileSystemStorage()
-# from base.models import *
-
-from TestProject.choices import *
-
 
 def get_profile_image_name(instance, filename):
     resource_img_path = Util.get_resource_path('profile', '')

@@ -90,10 +90,12 @@ class Scheduler(models.Model):
         return self.name
 
 class SchedulerItem(models.Model):
-    scheduler = models.ForeignKey(Scheduler,on_delete=models.PROTECT,related_name="scheduler")
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="scheduler_customer",null=True)
+    scheduler = models.ForeignKey(Scheduler,on_delete=models.PROTECT,related_name="item_scheduler")
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="customer_scheduler",null=True)
     total_invoice = models.IntegerField(null=True,blank=True)
     status = models.CharField(max_length=100,choices=scheduler_status,null=True,blank=True)
+    # invoice = models.ManyToManyField(Invoice)
+    is_legal_action = models.BooleanField(default=True)
     def __str__(self):
         return str(self.scheduler)
 
@@ -102,9 +104,9 @@ class SchedulerInvoice(models.Model):
     invoice = models.ManyToManyField(Invoice,related_name="scheduler_invoice")
 
     def __str__(self):
-        return str(self.scheduler_item.name)
+        return str(self.scheduler_item)
 
-class CollectionAction(models.Model):
+class CollectionActionReport(models.Model):
     scheduler_item = models.ForeignKey(SchedulerItem, on_delete=models.PROTECT,related_name="action_scheduler",null=True)
     action_by = models.ForeignKey(User, on_delete=models.PROTECT)
     action_type = models.CharField(max_length=100,choices=action_types,null=True,blank=True)
