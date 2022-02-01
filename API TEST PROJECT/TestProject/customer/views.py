@@ -4,9 +4,11 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from TestProject.rest_config import APIResponse
 
-from customer.models import Address, Contact, Customer, ECUser
+from customer.models import Address, Contact, Customer
 from customer.serializer import (AddressSerializer, ContactSerializer,
                                  CustomerSerializer, ECUserSerializer)
+
+from customer.models import User as ECUser
 
 # Create your views here.
 

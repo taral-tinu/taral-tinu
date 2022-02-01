@@ -4,7 +4,8 @@ from sqlite3 import Cursor
 from django.contrib import admin
 
 # Register your models here.
-from .models import Address, Contact, Country, Customer, ECUser, State
+from .models import Address, Contact, Country, Customer, State
+from customer.models import User as ECUser
 
 admin.site.register(Customer)
 admin.site.register(Country)
