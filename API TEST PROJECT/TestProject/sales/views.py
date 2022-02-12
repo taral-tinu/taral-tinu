@@ -14,20 +14,20 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.functions.window import FirstValue, LastValue
 from django.http.response import JsonResponse
 from django.utils import timezone
-# from finance_api.finance_api import util
-from finance_api.rest_config import APIResponse, CustomPagination
-from finance_api.util import Util
+# from finance_api.util import Util
 from rest_framework import generics, serializers, status, views, viewsets
 from rest_framework.decorators import action, parser_classes
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+# from finance_api.finance_api import util
+from TestProject.rest_config import APIResponse, CustomPagination
 
-from sales.models import (CollectionAction, Invoice, Scheduler,
+from sales.models import (CollectionActionReport, Invoice, Scheduler,
                           SchedulerInvoice, SchedulerItem)
-from sales.serializers import (ActionSerializer, CreateSchedulerSerializer,
-                               InvoiceSerializer, SchdulerSerializer,
-                               SchedulerDetailSerializer)
+from sales.serializer import (ActionSerializer, CreateSchedulerSerializer,
+                              InvoiceSerializer, SchdulerSerializer,
+                              SchedulerDetailSerializer)
 
 
 class InvoiceSechdulerView(viewsets.ModelViewSet):
@@ -228,7 +228,7 @@ class ActionView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         scheduler_id = self.request.GET.get("scheduler_id")
-        queryset = CollectionAction.objects.filter(scheduler_item_id=scheduler_id).all()
+        queryset = CollectionActionReport.objects.filter(scheduler_item_id=scheduler_id).all()
         return queryset
 
     def create(self, request):
@@ -243,7 +243,7 @@ class ActionView(viewsets.ModelViewSet):
     def delete_action(self,request):
         action_ids = request.data.get("ids")
         action_ids = [int(id) for id in action_ids.split(",")]
-        CollectionAction.objects.filter(id__in=action_ids).delete()
+        CollectionActionReport.objects.filter(id__in=action_ids).delete()
         return APIResponse(code=0, message="Action deleted")
 
 class CreateSchedulerView(viewsets.ModelViewSet):
