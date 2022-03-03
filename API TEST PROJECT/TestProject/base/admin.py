@@ -6,11 +6,10 @@ from .models import CodeTable, Currency
 
 
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ["name","symbol"]
+    list_display = ["name","code"]
 
 class CodeAdmin(admin.ModelAdmin):
     list_display = ["name","code"]
 
 admin.site.register(CodeTable,CodeAdmin)
 admin.site.register(Currency,CurrencyAdmin)
-

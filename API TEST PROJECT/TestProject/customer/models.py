@@ -22,7 +22,7 @@ class Contact(models.Model):
 
 class Customer(models.Model):
     ec_customer_id = models.IntegerField(null=True, blank=True, verbose_name="EC customer Id")
-    company_name = models.CharField(max_length=200, default="")
+    name = models.CharField(max_length=200, default="")
     account_manager = models.ForeignKey(Contact, verbose_name="Account manager", blank=True, null=True, on_delete=models.PROTECT)
     account_number = models.CharField(max_length=30, verbose_name="Account number", null=True, help_text="Number assigned by Accounting")
     initials = models.CharField(max_length=30,null=True, blank=True)
@@ -54,12 +54,12 @@ class Customer(models.Model):
     invoice_delivery = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="invoice_delivery",blank=True, null=True)
 
     def __str__(self):
-        return self.company_name
+        return self.name
 
 
 
 class User(models.Model):
-    company = models.ForeignKey(Customer,on_delete=models.PROTECT,null=True,blank=True)
+    customer = models.ForeignKey(Customer,on_delete=models.PROTECT,null=True,blank=True)
     username = models.CharField(max_length=200,null=True,blank=True)
     password = models.CharField(max_length=200,null=True,blank=True)
     contact = models.ForeignKey(Contact, on_delete=models.PROTECT,null=True,blank=True)
@@ -72,7 +72,7 @@ class User(models.Model):
 class Address(models.Model):
     street_name = models.CharField(max_length=100, default="")
     ec_address_id = models.IntegerField(null=True,blank=True)
-    company = models.ForeignKey(Customer, null=True, on_delete=models.PROTECT)
+    customer = models.ForeignKey(Customer, null=True, on_delete=models.PROTECT)
     street_no = models.CharField(max_length=100, default="")
     street_address1 = models.CharField(max_length=300, default="",blank=True)
     street_address2 = models.CharField(max_length=300, default="",blank=True)

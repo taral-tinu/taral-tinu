@@ -20,34 +20,20 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        contact_file = pd.read_csv("D:/TnuTaral/contacts1.csv")
+        contact_file = pd.read_excel("D:/TnuTaral/ECdata/contacts.xlsx")
         contact_file = json.loads(contact_file.to_json(orient='records',date_format = 'iso'))
-        # print(contact_file,"customer_file")
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 10
-        total_records = len(contact_file)
+        length = 50
         while True:
-            contacts = contact_file[start:(start + length)]
-            if len(contacts) == 0:
+            contact_data = contact_file[start:(start + length)]
+            if len(contact_data) == 0:
                     break
-            contact_data  = []
-            for contact in contacts:
-                # print(contact,"contact")
-                contact_data.append({
-                    'ec_contact_id': contact['ecContactId'],
-                    'first_name': contact['FirstName'],
-                    'last_name': contact['LastName'],
-                    'job_title': contact['JobTitle'],
-                    'is_deleted': True if contact['IsDeleted'] else False,
-                    })
-
-            # #--------------call API ------------------------
-            # print(contact_data,"contact_data")
+            print(contact_data,"contact_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/contact/'
-            response = requests.post(url, data=json.dumps(contact_data,cls=DateEncoder), headers=headers)
+            url = 'http://192.168.1.247:8001/dt/customer/contact/'
+            response = requests.post(url, data=json.dumps(contact_data), headers=headers)
             print(response,"response")
         print("==> data inserted finished")
 

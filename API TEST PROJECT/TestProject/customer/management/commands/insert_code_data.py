@@ -20,11 +20,11 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        code_file = pd.read_csv("D:/TnuTaral/codes.xlsx")
+        code_file = pd.read_excel("C:/Users/admin/Desktop/codes.xlsx")
         code_file = json.loads(code_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
+        length = 50
         total_records = len(code_file)
         while True:
             codes = code_file[start:(start + length)]
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             # print(customer_data,"customer_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/code/'
+            url = 'http://192.168.1.247:8001/dt/customer/code/'
             response = requests.post(url, data=json.dumps(code_data,cls=DateEncoder), headers=headers)
             print(response,"response")
         print("==> data inserted finished")

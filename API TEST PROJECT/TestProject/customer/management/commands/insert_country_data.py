@@ -20,41 +20,29 @@ from django.http import response
 class Command(BaseCommand):
     help = ""
     def handle(self, *args, **options):
-        user_file = pd.read_csv("D:/TnuTaral/users.csv")
-        user_file = json.loads(user_file.to_json(orient='records',date_format = 'iso'))
+        countries_file = pd.read_csv("D:/TnuTaral/country.csv")
+        countries_file = json.loads(countries_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
-        # contacts = Contact.objects.filter().values("id","code")
-        # contacts = get_code_ids("code","id",contacts)
-        codes = CodeTable.objects.filter().values("id","code")
-        code_ids = get_code_ids("code","id",codes)
+        length = 50
         while True:
-            users = user_file[start:(start + length)]
-            if len(users) == 0:
+            countries = countries_file[start:(start + length)]
+            if len(countries) == 0:
                     break
-            addresses_data  = []
-            for user in users:
-                # print(user,"user")
-                addresses_data.append({
-                    # 'company': user['companyId'],
-                    'username': user['UserName'],
-                    'password': user['Password'],
-                    # 'contact': user['companyId'],
-                    # 'language': get_code_ids[user['LanguageId']] if user['LanguageId'] else None, #codetable
-                    'is_power_user': True if user['IsPowerUser'] == 1 else False,
-                    'is_deleted': True if user['isDeleted'] == 1 else False,
-                    'is_active': True if  user['IsActive'] == 1 else False,
-
-
+            countries_data  = []
+            for country in countries:
+                print(country,"country")
+                countries_data.append({
+                    'name': country['Name'] if country['Name'] else "",
+                    'code': country['Initial'] if country['Initial'] else "",
                     })
 
             # #--------------call API ------------------------
-            # print(customer_data,"customer_data")
+            # print(countries_data,"customer_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/user/'
-            response = requests.post(url, data=json.dumps(addresses_data), headers=headers)
+            url = 'http://192.168.1.247:8001/dt/customer/country/'
+            response = requests.post(url, data=json.dumps(countries_data), headers=headers)
             print(response,"response")
         print("==> data inserted finished")
 

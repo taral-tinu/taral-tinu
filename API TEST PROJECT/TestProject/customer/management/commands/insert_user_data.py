@@ -24,7 +24,7 @@ class Command(BaseCommand):
         user_file = json.loads(user_file.to_json(orient='records'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
+        length = 50
         codes = CodeTable.objects.filter().values("id","code")
         code_ids = get_dict("code","id",codes)
         while True:
@@ -40,7 +40,7 @@ class Command(BaseCommand):
             users_data  = []
             for user in users:
                 users_data.append({
-                    'company': customer_ids[user['eccompanyId']] if user['eccompanyId'] in customer_ids else None,
+                    'customer_id': customer_ids[user['eccompanyId']] if user['eccompanyId'] in customer_ids else None,
                     'username': user['UserName'],
                     'password': user['Password'],
                     'contact': contact_ids[user['ecContactId']] if user['ecContactId'] in contact_ids else None,
@@ -56,7 +56,7 @@ class Command(BaseCommand):
             print(users_data,"users_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/user/'
+            url = 'http://192.168.1.247:8001/dt/customer/user/'
             response = requests.post(url, data=json.dumps(users_data), headers=headers)
             print(response,"response")
         print("==> data inserted finished")

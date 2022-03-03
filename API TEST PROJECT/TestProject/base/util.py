@@ -1,12 +1,18 @@
+import datetime
 import os
 
+import pytz
+from customer.models import Country
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db import connection
+from django.utils import timezone
 
-from base.models import SysParameter
+from base.models import CodeTable, Currency
 
+# from
 
+# from dateutil import tz
 class Util(object):
     @staticmethod
     def set_cache(key, value, time=3600):
@@ -22,26 +28,68 @@ class Util(object):
     def clear_cache(key):
         if cache.has_key(key):
             cache.delete(key)
-    sys_param_key = "sys_parameters"
-    def get_sys_paramter(key):
-        sys_parameters = None
-        new_sys_parameter = {}
-        if Util.get_cache(connection.tenant.schema_name, Util.sys_param_key) is None:
-            sys_parameters = SysParameter.objects.all()
-            Util.set_cache(connection.tenant.schema_name, Util.sys_param_key, sys_parameters, 3600)
-        else:
-            sys_parameters = Util.get_cache(connection.tenant.schema_name, Util.sys_param_key)
-        sys_param = None
-        for param in sys_parameters:
-            if param.para_code == key:
-                sys_param = param
-                break
 
-        if sys_param is None and key in new_sys_parameter.keys():
-            sys_parameter = None
-            sys_parameter = SysParameter.objects.create(para_code=key, para_value=new_sys_parameter[key][0], descr=new_sys_parameter[key][1], for_system=new_sys_parameter[key][2])
-            Util.clear_cache(connection.tenant.schema_name, Util.sys_param_key)
-            sys_parameters = SysParameter.objects.all()
-            Util.set_cache(connection.tenant.schema_name, Util.sys_param_key, sys_parameters, 3600)
-            sys_param = sys_parameter
-        return sys_param
+    @staticmethod
+    def get_resource_path(resource, resource_name):
+        resource_path = os.path.join(settings.RESOURCES_ROOT, "resources")
+        if resource == "profile":
+            resource_path = os.path.join(resource_path, "profile_image")
+        if resource_name:
+            resource_path = os.path.join(resource_path, resource_name)
+        return resource_path
+
+    @staticmethod
+    def get_resource_url(resource, resource_name):
+        resource_url = settings.RESOURCES_URL + "resources/"
+        if resource == "profile":
+            resource_url += "profile_image/"
+        resource_url += resource_name
+        return resource_url
+
+    @staticmethod
+    def delete_old_file(path_file):
+        if os.path.exists(path_file):
+            os.remove(path_file)
+
+    @staticmethod
+    def get_dict_from_queryset(key_name, val, records):
+        dict = {}
+        for record in records:
+            dict[record[key_name]] = record[val]
+
+        return dict
+
+    @staticmethod
+    def get_utc_datetime(local_datetime, has_time):
+        naive_datetime = None
+        current_time_zone = timezone.get_current_timezone_name()
+        local_time = pytz.timezone(current_time_zone)
+
+        if has_time:
+            naive_datetime = datetime.datetime.strptime(local_datetime, "%d/%m/%Y %H:%M")
+        else:
+            naive_datetime = datetime.datetime.strptime(local_datetime, "%d/%m/%Y")
+
+        local_datetime = local_time.localize(naive_datetime, is_dst=None)
+        utc_datetime = local_datetime.astimezone(pytz.utc)
+        return utc_datetime
+
+    @staticmethod
+    def get_codes(code):
+        codes = None
+        if Util.get_cache(code) is None:
+            print("set")
+            if code == "code_table":
+                codes = CodeTable.objects.values("code","id")
+                Util.set_cache("code_table", codes, 3600)
+            elif code == "currency":
+                codes = Currency.objects.values("code","id")
+                Util.set_cache("currency", codes, 3600)
+            elif code == "country":
+                codes = Country.objects.values("code","id")
+                Util.set_cache("country", codes, 3600)
+        else:
+            print("get")
+            codes = Util.get_cache(code)
+        dict = Util.get_dict_from_queryset("code","id",codes)
+        return dict

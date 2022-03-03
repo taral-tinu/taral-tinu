@@ -1,21 +1,21 @@
 from django.conf.urls import include, url
 from rest_framework.routers import DefaultRouter
 
-from sales.views import ActionView, LegalActionView
+from sales.views import ActionView, CollectionInvoiceView, SchedulerView
 
 router = DefaultRouter(trailing_slash=True)
 
 # router.register(r'user', UserView, basename='user')
 # router.register(r'role', UserRole, basename='role')
 # router.register(r'collection_action', SchedulerItemView, basename='collection_action')
-router.register(r'legal_actions', LegalActionView, basename='legal_actions')
+# router.register(r'legal_actions', LegalActionView, basename='legal_actions')
 router.register(r'action', ActionView, basename='actions')
 # router.register(r'scheduler', SchedulerView, basename='scheduler')
 # router.register(r'invoice',InvoiceView, basename="invoice")
-# collection_actions = SchedulerItemView.as_view({"get":"list"})
+collection_actions = CollectionInvoiceView.as_view({"get":"list"})
 # invoices = InvoiceView.as_view({"get":"list"})
 actions = ActionView.as_view({"get":"list"})
-
+router.register(r'scheduler', SchedulerView, basename='scheduler')
 
 urlpatterns = [
     # url(r"^get_menu/$", GetMenus.as_view(), name="all_menu"),
@@ -24,7 +24,7 @@ urlpatterns = [
 
     # #-----------------CollectionAction----------------
 
-    # url(r"^collection_actions/$",collection_actions,name="collection-actions"),
+    url(r"^collection_actions/$",collection_actions,name="collection-actions"),
     url(r"actions",actions,name="actions"),
     # url(r"^collections/$", ActionListView.as_view(), name="collections"),
     # url(r"^reminder_details/$", SchedulerDetailView.as_view(), name="reminder_details"),

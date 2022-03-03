@@ -24,7 +24,7 @@ class Command(BaseCommand):
         address_file = json.loads(address_file.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 1
+        length = 50
         countries = Country.objects.filter().values("id","code")
         country_ids = get_dict("code","id",countries)
         codes = CodeTable.objects.filter().values("id","code")
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 print(address,"code")
                 addresses_data.append({
                     'ec_address_id': address['ecAddressId'],
-                    'company_id': customer_ids[address['eccompanyId']] if address['eccompanyId'] in customer_ids else None,
+                    'customer': customer_ids[address['eccompanyId']] if address['eccompanyId'] in customer_ids else None,
                     'street_name': address['StreetName'] if address['StreetName'] else "",
                     'street_no': address['StreetNo'] if address['StreetNo'] else "",
                     'street_address1': address['StreetAddress1'] if address['StreetAddress1'] else "",
@@ -68,7 +68,7 @@ class Command(BaseCommand):
             print(addresses_data,"addresses_data")
             start += length
             time.sleep(1)
-            url = 'http://127.0.0.1:8000/dt/customer/address/'
+            url = 'http://192.168.1.247:8001/dt/customer/address/'
             response = requests.post(url, data=json.dumps(addresses_data,cls=DateEncoder), headers=headers)
             print(response,"response")
         print("==> data inserted finished")
