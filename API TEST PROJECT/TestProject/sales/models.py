@@ -11,7 +11,7 @@ from TestProject.signals import state_audit_signal
 class Invoice(models.Model):
     invoice_number = models.CharField(max_length=100,unique=True)
     status = models.ForeignKey(CodeTable,on_delete=models.PROTECT,related_name="%(class)s_status")
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="%(class)s_customer",null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="%(class)s_customer")
     outstanding_amount = models.DecimalField(max_digits=12, decimal_places=3,null=True, blank=True)
     currency_outstanding_amount = models.DecimalField(max_digits=12, decimal_places=3,null=True, blank=True)
     invoice_created_on = models.DateTimeField(null=True, blank=True)
@@ -87,29 +87,14 @@ class InvoiceOrder(models.Model):
     invoice_ref = models.CharField(max_length=100,null=True,blank=True)
 
 
-# class Scheduler(models.Model):
-#     name = models.CharField(max_length=200,verbose_name="Scheduler Name",null=True)
-#     created_on = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return self.name
-
 class Scheduler(models.Model):
-    name = models.CharField(max_length=200,verbose_name="Scheduler Name",null=True)
+    name = models.CharField(max_length=200,verbose_name="Scheduler Name")
     created_on = models.DateTimeField(auto_now=True)
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="customer_scheduler",null=True)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT,related_name="customer_scheduler")
     total_invoice = models.IntegerField(null=True,blank=True)
     invoice = models.ManyToManyField(Invoice,related_name="%(class)s_invoice")
     def __str__(self):
         return str(self.name)
-
-# class SchedulerInvoice(models.Model):
-#     scheduler_item = models.ForeignKey(SchedulerItem,on_delete=models.CASCADE,related_name="scheduler_item")
-#     invoice = models.ManyToManyField(Invoice,related_name="scheduler_invoice")
-
-#     def __str__(self):
-#         return str(self.scheduler_item)
-
 class ActionReport(models.Model):
     customer = models.ForeignKey(Customer,on_delete=models.PROTECT, related_name="%(class)s_customer")
     invoice = models.ManyToManyField(Invoice,related_name="%(class)s_invoice")

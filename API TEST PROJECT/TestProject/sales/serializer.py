@@ -9,6 +9,7 @@ from customer.models import *
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.forms import fields
+from numpy import source
 from rest_framework import serializers
 from TestProject.rest_config import LocalDateTime, RepresentFilePath
 from TestProject.util import Util
@@ -179,7 +180,7 @@ class BulkListSerializer(serializers.ListSerializer):
         writable_fields = [
             x
             for x in self.child.Meta.fields
-            if x not in self.child.Meta.read_only_fields
+            # if x not in self.child.Meta.read_only_fields
         ]
 
         try:
@@ -218,9 +219,9 @@ class TaskSerializer(serializers.ModelSerializer):
         return instance
     class Meta:
         model = Invoice
-        fields = ["invoice_value"]
-        # fields = '__all__'
-        read_only_fields = ("id", )
+        # fields = ["invoice_value"]
+        fields = '__all__'
+        # read_only_fields = ("id", )
         list_serializer_class = BulkListSerializer
 
 class UpdateTaskSerializer(serializers.ModelSerializer):
@@ -243,8 +244,8 @@ class UpdateTaskSerializer(serializers.ModelSerializer):
         list_serializer_class = BulkListSerializer
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    last_reminder_date = LocalDateTime(source="last_rem_date",read_only=True)
-    customer_name = serializers.CharField(read_only=True)
+    last_reminder_date = LocalDateTime(source="last_rem_date", read_only=True)
+    customer_name = serializers.CharField(source="customer__name", read_only=True)
 
     # customer_name = serializers.CharField(source="customer__name",read_only=True)
     country = serializers.CharField(read_only=True)

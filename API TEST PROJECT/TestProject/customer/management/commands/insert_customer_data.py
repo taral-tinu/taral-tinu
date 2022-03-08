@@ -24,13 +24,6 @@ class Command(BaseCommand):
             customer_data = customer_file[start:(start + length)]
             if len(customer_data) == 0:
                 break
-            # customer_data = []
-            # for customer in customer_file:
-            #     customer["last_order_date"] = parser.parse(customer['last_order_date']) if customer['last_order_date'] else None
-            #     # customer_data.append({
-            #     #     "last_order_date":customer["last_order_date"]
-            #     # })
-            #     customer_data.append(customer)
             start += length
             time.sleep(1)
             url = 'http://192.168.1.247:8001/dt/customer/customer/'

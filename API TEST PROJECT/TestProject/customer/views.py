@@ -71,7 +71,7 @@ class ECUserView(viewsets.ModelViewSet):
     queryset = ECUser.objects.all()
     serializer_class = ECUserSerializer
     def create(self, request):
-        print(request.data,"user")
+        # print(request.data,"user")
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

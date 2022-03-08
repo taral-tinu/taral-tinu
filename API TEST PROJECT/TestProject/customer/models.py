@@ -21,7 +21,7 @@ class Contact(models.Model):
 
 
 class Customer(models.Model):
-    ec_customer_id = models.IntegerField(null=True, blank=True, verbose_name="EC customer Id")
+    ec_customer_id = models.IntegerField(verbose_name="EC customer Id")
     name = models.CharField(max_length=200, default="")
     account_manager = models.ForeignKey(Contact, verbose_name="Account manager", blank=True, null=True, on_delete=models.PROTECT)
     account_number = models.CharField(max_length=30, verbose_name="Account number", null=True, help_text="Number assigned by Accounting")
@@ -59,11 +59,11 @@ class Customer(models.Model):
 
 
 class User(models.Model):
-    customer = models.ForeignKey(Customer,on_delete=models.PROTECT,null=True,blank=True)
+    customer = models.ForeignKey(Customer,on_delete=models.PROTECT)
     username = models.CharField(max_length=200,null=True,blank=True)
     password = models.CharField(max_length=200,null=True,blank=True)
-    contact = models.ForeignKey(Contact, on_delete=models.PROTECT,null=True,blank=True)
-    language = models.ForeignKey(CodeTable, on_delete=models.PROTECT,null=True,blank=True)
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT)
+    language = models.ForeignKey(CodeTable, on_delete=models.PROTECT)
     is_power_user = models.BooleanField(default=False)
     is_deleted =  models.BooleanField(default=False)
     is_active =  models.BooleanField(default=False)
@@ -72,7 +72,7 @@ class User(models.Model):
 class Address(models.Model):
     street_name = models.CharField(max_length=100, default="")
     ec_address_id = models.IntegerField(null=True,blank=True)
-    customer = models.ForeignKey(Customer, null=True, on_delete=models.PROTECT)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
     street_no = models.CharField(max_length=100, default="")
     street_address1 = models.CharField(max_length=300, default="",blank=True)
     street_address2 = models.CharField(max_length=300, default="",blank=True)

@@ -35,28 +35,27 @@ from sales.serializer import (ActionSerializer, InvoiceCreateSerializer,
                               SchedulerDetailSerializer, TaskSerializer,
                               UpdateTaskSerializer)
 
+# class InvoiceSechdulerView(viewsets.ModelViewSet):
+#     pass
 
-class InvoiceSechdulerView(viewsets.ModelViewSet):
-    pass
 
+# class CollectionActionView(viewsets.ModelViewSet):
+#     serializer_class = SchdulerSerializer
+#     pagination_class = CustomPagination
+#     def get_queryset(self):
+#         query = Q()
+#         status = self.request.GET.get("status")
+#         is_legal = self.request.GET.get("is_legal")
+#         customer_id = self.request.GET.get("customer_id")
+#         # if status:
+#         #     query.add(Q(status=status),query.connector)
+#         if customer_id:
+#             query.add(Q(customer_id=customer_id),query.connector)
 
-class CollectionActionView(viewsets.ModelViewSet):
-    serializer_class = SchdulerSerializer
-    pagination_class = CustomPagination
-    def get_queryset(self):
-        query = Q()
-        status = self.request.GET.get("status")
-        is_legal = self.request.GET.get("is_legal")
-        customer_id = self.request.GET.get("customer_id")
-        # if status:
-        #     query.add(Q(status=status),query.connector)
-        if customer_id:
-            query.add(Q(customer_id=customer_id),query.connector)
-
-        if is_legal == "True":
-            query.add(~Q(is_legal=False) & ~Q(status="finished"),query.connector)
-        else:
-            query.add(~Q(is_legal=True) & ~Q(status="finished"),query.connector)
+#         if is_legal == "True":
+#             query.add(~Q(is_legal=False) & ~Q(status="finished"),query.connector)
+#         else:
+#             query.add(~Q(is_legal=True) & ~Q(status="finished"),query.connector)
         # queryset = (SchedulerItem.objects
         #     .filter(query)
         #     .values("id","scheduler_id","customer__name","scheduler__name","scheduler__created_on","total_invoice","customer_id"))
@@ -228,14 +227,14 @@ class CollectionActionView(viewsets.ModelViewSet):
 #             .values("id","scheduler_id","customer__name","scheduler__name","scheduler__created_on","total_invoice"))
 #         return queryset
 
-class ActionView(viewsets.ModelViewSet):
-    serializer_class = ActionSerializer
-    pagination_class = CustomPagination
+# class ActionView(viewsets.ModelViewSet):
+#     serializer_class = ActionSerializer
+#     pagination_class = CustomPagination
 
-    def get_queryset(self):
-        scheduler_id = self.request.GET.get("scheduler_id")
-        queryset = ActionReport.objects.filter(scheduler_item_id=scheduler_id).all()
-        return queryset
+#     def get_queryset(self):
+#         scheduler_id = self.request.GET.get("scheduler_id")
+#         queryset = ActionReport.objects.filter(scheduler_item_id=scheduler_id).all()
+#         return queryset
 
     # def create(self, request):
     #     serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
@@ -865,8 +864,8 @@ class SchedulerView(viewsets.ModelViewSet):
 
         invoice_create = []
         invoice_update = []
-        invoices_instance = Invoice.objects.filter(invoice_number__in=invoices_list)
-        exist_invoices = list(invoices_instance.values_list("invoice_number",flat=True))
+        invoice_instances = Invoice.objects.filter(invoice_number__in=invoices_list)
+        exist_invoices = list(invoice_instances.values_list("invoice_number",flat=True))
         for invoices in invoice_data:
             for invoice in invoices:
                 customer_id = customer_ids[invoice["customer"]] if invoice["customer"] in customer_ids else None
@@ -897,8 +896,8 @@ class SchedulerView(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=invoice_create,many=True)
         serializer.is_valid(raise_exception=True)
         serializer = self.perform_create(serializer)
-        if invoices_instance:
-            serializer = UpdateTaskSerializer(instance=invoices_instance,data=invoice_update,many=True)
+        if invoice_instances:
+            serializer = UpdateTaskSerializer(instance=invoice_instances,data=invoice_update,many=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
 
@@ -907,8 +906,8 @@ class SchedulerView(viewsets.ModelViewSet):
             customer_id = customer_ids[sch_d["companyId"]] if sch_d["companyId"] in customer_ids else None,
             scheduler = Scheduler.objects.create(name = scheduler_list["ScheduleName"],customer_id=customer_id[0])
 
-            if invoices_instance:
-                for invoice in invoices_instance:
+            if invoice_instances:
+                for invoice in invoice_instances:
                     if invoice.customer is not None and  invoice.customer.id == customer_id[0]:
                         scheduler.invoice.add(invoice.id)
             else:
@@ -922,9 +921,6 @@ class SchedulerView(viewsets.ModelViewSet):
 class CollectionInvoiceView(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     pagination_class = CustomPagination
-
-
-
     # filterset_class = InvoiceFilter
     # ordering=[F('action_date').asc(nulls_last=True)]
     def get_queryset(self):
@@ -941,21 +937,19 @@ class CollectionInvoiceView(viewsets.ModelViewSet):
         actions = ActionReport.objects.filter(customer_id=OuterRef('customer_id')).order_by("-id")[:1]
         # print("AALLLLLLLLL")
         queryset = (Invoice.objects
-            .prefetch_related("scheduler_invoice")
+            .select_related("actionreport_invoice")
             .filter(query)
-            .values("id","invoice_number","is_finished","payment_tracking_number","customer_id","invoice_created_on","amount_paid","last_rem_date","is_legal")
+            .values("id","invoice_number","customer__name","is_finished","payment_tracking_number","customer_id","invoice_created_on","amount_paid","last_rem_date","is_legal")
             .annotate(
+                    total_reminder = Count("scheduler_invoice__id"),
                     status = F("status__desc"),
                     customer_name = F("customer__name"),
-                    # total_reminder = Count("scheduler_invoice__scheduler_item__id",distinct=True),
                     country = Subquery(address.values("country__name")),
-                    # action_status =Case(
-                    #     # When(~Q(is_legal=True) & ~Q(is_finished=True),then=F("collectioninvoice_invoice__action__action_status")),
-                    #     ),
                     action_date =  Subquery(actions.values("action_date")),
                     action_id =  Subquery(actions.values("id")),
                     invoice_amount = F("invoice_value"),
+                    action_status = F("actionreport_invoice__action_status")
                 )
-            .order_by("-action_id")
+            # .order_by("-action_id")
             .distinct())
         return queryset
