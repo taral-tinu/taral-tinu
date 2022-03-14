@@ -22,10 +22,7 @@ from customer.serializer import (AddressSerializer, ContactSerializer,
 class ContactView(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    # create multiple objects
-
     def create(self, request):
-        print(request.data,"contact")
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -33,17 +30,7 @@ class ContactView(viewsets.ModelViewSet):
 class CustomerView(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    # create multiple objects
     def create(self, request):
-        print("Call")
-        # if isinstance(request.data, list):
-        #   for item in request.data:
-
-        # codes = CodeTable.objects.filter().values("id","code")
-        # code_ids = Util.get_dict_from_queryset("code","id",codes)
-        # currency = Currency.objects.filter().values("id","code")
-        # currency_code = Util.get_dict_from_queryset("code","id",currency)
-
         code_ids = Util.get_codes("code_table")
         currency_code = Util.get_codes("currency")
 
@@ -51,7 +38,6 @@ class CustomerView(viewsets.ModelViewSet):
         ec_contact_ids = [x["account_manager"] for x in request.data]
         contacts = Contact.objects.filter(ec_contact_id__in=ec_contact_ids).values("id","ec_contact_id")
         contact_ids = Util.get_dict_from_queryset("ec_contact_id","id",contacts)
-        # if isinstance(request.data, list):
         for request in request.data:
             last_order_date = parser.parse(request['last_order_date']) if request['last_order_date'] else None
             request['customer_type_id'] = int(code_ids[request['customer_type']]) if request['customer_type'] in code_ids else None
@@ -65,12 +51,10 @@ class CustomerView(viewsets.ModelViewSet):
 
             else:
                 request['last_order_date'] = last_order_date.strftime("%Y-%m-%d %H:%M")
-            request['account_manager_id'] = None #contact_ids[request['account_manager']] if request['account_manager'] in contact_ids else None,
+            request['account_manager_id'] = contact_ids[request['account_manager']] if request['account_manager'] in contact_ids else None,
             customer_data.append(request)
-        print(customer_data,"customer_data")
         serializer = self.get_serializer(data=customer_data, many=True)
         serializer.is_valid(raise_exception=True)
-        # print(serializer,"serializer")
         self.perform_create(serializer)
         return APIResponse(serializer.data)
 
@@ -88,10 +72,27 @@ class AddressView(viewsets.ModelViewSet):
 class ECUserView(viewsets.ModelViewSet):
     queryset = ECUser.objects.all()
     serializer_class = ECUserSerializer
+
     def create(self, request):
-        # print(request.data,"user")
-        serializer = self.get_serializer(data=request.data, many=True)
+        code_ids = Util.get_codes("code_table")
+        ec_contact_ids = [x["contact"] for x in request.data]
+        contacts = Contact.objects.filter(ec_contact_id__in=ec_contact_ids).values("id","ec_contact_id")
+        contact_ids = Util.get_dict_from_queryset("ec_contact_id","id",contacts)
+        ec_customer_ids = [x["customer"] for x in request.data]
+        customers = Customer.objects.filter(ec_customer_id__in=ec_customer_ids).values("id","ec_customer_id")
+        customer_ids = Util.get_dict_from_queryset("ec_customer_id","id",customers)
+        # print(customer_ids,"customer_ids")
+        users_data =[]
+        for user in request.data:
+            customer_id = customer_ids[user['customer']] if user['customer'] in customer_ids else None
+            # print(customer_id,"customer_id")
+            user['customer_id'] = customer_id
+            user['contact_id'] = contact_ids[user['contact']] if user['contact'] in contact_ids else None
+            user["language_id"] = code_ids[user['language']] if user['language'] in code_ids else None
+            users_data.append(user)
+        serializer = self.get_serializer(data=users_data, many=True)
         serializer.is_valid(raise_exception=True)
+        print(serializer,"serializer")
         self.perform_create(serializer)
         return APIResponse(code=0,message="data inserted")
 

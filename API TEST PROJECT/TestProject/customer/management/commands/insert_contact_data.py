@@ -29,7 +29,6 @@ class Command(BaseCommand):
             contact_data = contact_file[start:(start + length)]
             if len(contact_data) == 0:
                     break
-            print(contact_data,"contact_data")
             start += length
             time.sleep(1)
             url = 'http://192.168.1.247:8001/dt/customer/contact/'

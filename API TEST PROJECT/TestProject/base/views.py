@@ -11,8 +11,7 @@ class CodeView(viewsets.ModelViewSet):
     queryset = CodeTable.objects.all()
     serializer_class = CodeSerializer
     def create(self, request):
-        print(request.data,"LLLLLLLLLLLLLL")
-        serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
+        serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return APIResponse(code=0,message="data created")

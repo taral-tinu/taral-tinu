@@ -1,19 +1,12 @@
 from dataclasses import fields
 
 from base.models import CodeTable, Currency
-from base.serializer import BulkListSerializer
 from rest_framework import serializers
+from TestProject.rest_config import BulkListSerializer, ModelObjectidField
 
 from customer.models import Address, Contact, Country, Customer
 from customer.models import User as ECUser
 
-
-class ModelObjectidField(serializers.Field):
-    def to_representation(self, value):
-        return value.id
-
-    def to_internal_value(self, data):
-        return data
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,7 +38,7 @@ class ContactSerializer(serializers.ModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        instance = Customer(**validated_data)
+        instance = Contact(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
         return instance
@@ -57,7 +50,7 @@ class CodeSerializer(serializers.ModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        instance = Customer(**validated_data)
+        instance = CodeTable(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
         return instance
@@ -68,19 +61,28 @@ class AddressSerializer(serializers.ModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        instance = Customer(**validated_data)
+        instance = Address(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
         return instance
 
 class ECUserSerializer(serializers.ModelSerializer):
+    # customer_id = serializers.IntegerField(write_only=True)
+    # language_id = serializers.IntegerField(write_only=True)
+    # contact_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = ECUser
-        fields = "__all__"
+        fields = ["customer_id","username","password","language_id",
+                  "contact_id","is_power_user","is_deleted","is_active",
+                  "sa_user_responsibilities"]
+        # read_only_fields = ("id", "customer","contact","language")
+        # fields = "__all__"
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        instance = Customer(**validated_data)
+        # print(validated_data,"validated_data")
+        instance = ECUser(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
         return instance
@@ -92,7 +94,7 @@ class CountrySerializer(serializers.ModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        instance = Customer(**validated_data)
+        instance = Country(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
         return instance

@@ -1,6 +1,8 @@
 from types import CodeType
 
 from dateutil import tz
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.utils import timezone
 from rest_framework import pagination, serializers
 from rest_framework.response import Response
@@ -62,3 +64,19 @@ class LocalDateTime(serializers.DateTimeField):
         new_time = utctime.astimezone(to_zone)
         return new_time.strftime("%d/%m/%Y %H:%M")
 
+class BulkListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        result = [self.child.create(attrs) for attrs in validated_data]
+        try:
+            self.child.Meta.model.objects.bulk_create(result)
+        except IntegrityError as e:
+            raise ValidationError(e)
+        return result
+
+
+class ModelObjectidField(serializers.Field):
+    def to_representation(self, value):
+        return value.id
+
+    def to_internal_value(self, data):
+        return data
