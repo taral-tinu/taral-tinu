@@ -16,6 +16,6 @@ router.register(r"country",CountryView,basename="country")
 
 
 urlpatterns = [
-
+    # url(r"^customer/$",CustomerView.as_view(),name="customer")
     ]
 urlpatterns += router.urls

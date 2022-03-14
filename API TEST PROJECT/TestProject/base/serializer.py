@@ -22,19 +22,19 @@ class BulkListSerializer(serializers.ListSerializer):
             raise ValidationError(e)
         return result
 
-    def update(self, instances, validated_data):
-        # print("validated_data",validated_data)
-        instance_hash = {index: instance for index, instance in enumerate(instances)}
-        result = [
-            self.child.update(instance_hash[index], attrs)
-            for index, attrs in enumerate(validated_data)
-        ]
-        writable_fields = [
-            x
-            for x in self.child.Meta.fields
-        ]
-        try:
-            self.child.Meta.model.objects.bulk_update(result, writable_fields)
-        except IntegrityError as e:
-            raise ValidationError(e)
+    # def update(self, instances, validated_data):
+    #     # print("validated_data",validated_data)
+    #     instance_hash = {index: instance for index, instance in enumerate(instances)}
+    #     result = [
+    #         self.child.update(instance_hash[index], attrs)
+    #         for index, attrs in enumerate(validated_data)
+    #     ]
+    #     writable_fields = [
+    #         x
+    #         for x in self.child.Meta.fields
+    #     ]
+    #     try:
+    #         self.child.Meta.model.objects.bulk_update(result, writable_fields)
+    #     except IntegrityError as e:
+    #         raise ValidationError(e)
         return result

@@ -23,13 +23,12 @@ from sales.models import *
 from TestProject.rest_config import APIResponse, CustomPagination
 from TestProject.util import Util
 
+from api.serializer import (RolePermissionSerializer, UserListSerializer,
+                            UserProfileSerializer, UserSerializer)
+
 from .filter import RoleFilter, UserFilter
 from .models import (ContentPermission, Group, GroupPermission, MainMenu,
                      PagePermission, UserGroup, UserProfile)
-
-from api.serializer import (RolePermissionSerializer,
-                         UserListSerializer, UserProfileSerializer,
-                         UserSerializer)
 
 
 class GetMenus(APIView):
@@ -226,8 +225,6 @@ class UserRole(viewsets.ViewSet):
                         perms_to_del.append(perm)
                 if len(perms_to_del) > 0:
                     GroupPermission.objects.filter(page_permission_id__in=perms_to_del, group_id=group_id).delete()
-            # role_data = self.get_role(request)
-            # print(role_data.data,"role_data")
             return APIResponse(serializer.data)
         return APIResponse(serializer.errors)
 
@@ -249,6 +246,4 @@ class UserRole(viewsets.ViewSet):
         GroupPermission.objects.filter(group_id__in=ids).delete()
         Group.objects.filter(id__in=ids).delete()
         return APIResponse(code=0, message= "Data deleted")
-
-#===================================== collection Action module ===============================#
 

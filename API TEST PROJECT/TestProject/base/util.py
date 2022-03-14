@@ -78,18 +78,20 @@ class Util(object):
     def get_codes(code):
         codes = None
         if Util.get_cache(code) is None:
-            print("set")
             if code == "code_table":
+                print("code_table")
                 codes = CodeTable.objects.values("code","id")
                 Util.set_cache("code_table", codes, 3600)
             elif code == "currency":
+                print("currency")
                 codes = Currency.objects.values("code","id")
                 Util.set_cache("currency", codes, 3600)
             elif code == "country":
+                print("country")
                 codes = Country.objects.values("code","id")
                 Util.set_cache("country", codes, 3600)
         else:
-            print("get")
             codes = Util.get_cache(code)
+        # print("KKKKKKKKK")
         dict = Util.get_dict_from_queryset("code","id",codes)
         return dict

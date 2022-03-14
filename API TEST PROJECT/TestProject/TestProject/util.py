@@ -44,24 +44,5 @@ class Util(object):
         if os.path.exists(path_file):
             os.remove(path_file)
 
-    # @staticmethod
-    # def get_local_time(utctime, showtime=False, time_format=None):
-    #     if utctime == "" or utctime is None or utctime == 0 or utctime == "-":
-    #         return ""
-    #     timezone_info = Util.get_timezone_info()
-    #     from_zone = tz.gettz("UTC")
-    #     to_zone = tz.gettz(timezone_info)
-    #     utctime = utctime.replace(tzinfo=from_zone)
-    #     new_time = utctime.astimezone(to_zone)
-    #     if showtime:
-    #         if time_format is None:
-    #             time_format = "%d/%m/%Y %H:%M"
-    #         return new_time.strftime(time_format)
-    #     else:
-    #         return new_time.strftime("%d/%m/%Y")
-    # @staticmethod
-    # def delete_old_file(type,model):
-    #     DeleteOldFile.deleteFile(type,model)
-
 
 
