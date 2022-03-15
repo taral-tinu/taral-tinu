@@ -66,6 +66,7 @@ class LocalDateTime(serializers.DateTimeField):
 
 class BulkListSerializer(serializers.ListSerializer):
     def create(self, validated_data):
+        print(validated_data,"validated_data")
         result = [self.child.create(attrs) for attrs in validated_data]
         try:
             self.child.Meta.model.objects.bulk_create(result)
@@ -76,7 +77,6 @@ class BulkListSerializer(serializers.ListSerializer):
 
 class ModelObjectidField(serializers.Field):
     def to_representation(self, value):
-        return value.id
-
+        return value
     def to_internal_value(self, data):
         return data

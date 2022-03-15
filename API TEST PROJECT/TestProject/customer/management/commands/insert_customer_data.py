@@ -22,7 +22,7 @@ class Command(BaseCommand):
         customers = json.loads(customers.to_json(orient='records',date_format = 'iso'))
         headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
         start = 0
-        length = 75
+        length = 500
         while True:
             customer_data = customers[start:(start + length)]
             if len(customer_data) == 0:

@@ -168,29 +168,27 @@ class BulkListSerializer(serializers.ListSerializer):
 
         return result
 
-    # def update(self, instances, validated_data):
-    #     # print("validated_data",validated_data)
-    #     instance_hash = {index: instance for index, instance in enumerate(instances)}
+    def update(self, instances, validated_data):
+        # print("validated_data",validated_data)
+        instance_hash = {index: instance for index, instance in enumerate(instances)}
 
-    #     result = [
-    #         self.child.update(instance_hash[index], attrs)
-    #         for index, attrs in enumerate(validated_data)
-    #     ]
+        result = [
+            self.child.update(instance_hash[index], attrs)
+            for index, attrs in enumerate(validated_data)
+        ]
 
-    #     writable_fields = [
-    #         x
-    #         for x in self.child.Meta.fields
-    #         # if x not in self.child.Meta.read_only_fields
-    #     ]
+        writable_fields = [
+            x
+            for x in self.child.Meta.fields
+            # if x not in self.child.Meta.read_only_fields
+        ]
 
-    #     try:
-    #         self.child.Meta.model.objects.bulk_update(result, writable_fields)
-    #     except IntegrityError as e:
-    #         raise ValidationError(e)
+        try:
+            self.child.Meta.model.objects.bulk_update(result, writable_fields)
+        except IntegrityError as e:
+            raise ValidationError(e)
 
-        # update_project_last_modified(result)
-
-        # return result
+        return result
 
 
     # def to_internal_value(self, data):

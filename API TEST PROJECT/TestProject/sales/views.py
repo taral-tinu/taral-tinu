@@ -809,7 +809,7 @@ from sales.serializer import (ActionSerializer, InvoiceCreateSerializer,
 
 
 class SchedulerView(viewsets.ModelViewSet):
-    queryset = (Invoice.objects.prefetch_related("scheduler_invoice"))
+    queryset = (Invoice.objects.all())
     serializer_class  = TaskSerializer
     @action(detail=False,methods=["post"])
     def create_scheduler(self,request):
@@ -893,13 +893,14 @@ class SchedulerView(viewsets.ModelViewSet):
                     invoice_create.append(invoice)
                 else:
                     invoice_update.append(invoice)
-        serializer = self.get_serializer(data=invoice_create,many=True)
-        serializer.is_valid(raise_exception=True)
-        serializer = self.perform_create(serializer)
         if invoice_instances:
-            serializer = UpdateTaskSerializer(instance=invoice_instances,data=invoice_update,many=True)
+            serializer = UpdateTaskSerializer(instance=invoice_instances,data=invoice_update,many=isinstance(invoice_create,list))
             serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
+            serializer.save()
+        else:
+            serializer = self.get_serializer(data=invoice_create,many=isinstance(invoice_create,list))
+            serializer.is_valid(raise_exception=True)
+            serializer = self.perform_create(serializer)
 
         invoices_ = Invoice.objects.filter(invoice_number__in=invoices_list).values("id","customer")
         for sch_d in scheduler_list["Customer"]:
@@ -927,15 +928,14 @@ class CollectionInvoiceView(viewsets.ModelViewSet):
         query = Q()
         customer_id = self.request.GET.get("customer_id")
         status = self.request.GET.get("status")
+        address = Address.objects.filter(customer_id=OuterRef('customer_id')).order_by("-id")[:1]
+        actions = ActionReport.objects.filter(customer_id=OuterRef('customer_id')).order_by("-id")[:1]
         if status in ["due","done"]:
             print("due Done")
             query.add(Q(actionreport_invoice__action_status=status),query.connector)
             query.add(Q(is_finished=False),query.connector)
         elif status == "finished":
             query.add(Q(is_finished=True),query.connector)
-        address = Address.objects.filter(customer_id=OuterRef('customer_id')).order_by("-id")[:1]
-        actions = ActionReport.objects.filter(customer_id=OuterRef('customer_id')).order_by("-id")[:1]
-        # print("AALLLLLLLLL")
         queryset = (Invoice.objects
             .select_related("actionreport_invoice")
             .filter(query)

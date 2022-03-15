@@ -11,16 +11,7 @@ from customer.models import User as ECUser
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ["ec_customer_id","name","account_manager_id","account_number",
-                  "initials","customer_type_id","tax_number_type_id","vat_no","invoice_prefrence",
-                  "invoice_postage","is_sales_review","is_vat_verified","sa_company_competence"
-                  ,"sa_ec_customer","peppol_address","status_id","last_order_date","is_allow_send_mail",
-                  "invoice_lang_id","is_deleted","is_duplicate",
-                  "is_exclude_vat","is_deliver_invoice_by_post","is_student",
-                  "is_peppol_verfied","is_always_vat","is_teacher","is_student_team",
-                  "is_call_report_attached","currency_id","invoice_delivery_id"
-                  ]
-        # fields = "__all__"
+        fields = "__all__"
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
@@ -67,21 +58,17 @@ class AddressSerializer(serializers.ModelSerializer):
         return instance
 
 class ECUserSerializer(serializers.ModelSerializer):
-    # customer_id = serializers.IntegerField(write_only=True)
-    # language_id = serializers.IntegerField(write_only=True)
-    # contact_id = serializers.IntegerField(write_only=True)
+    customer_id = ModelObjectidField()
+    contact_id = ModelObjectidField()
+    language_id = ModelObjectidField(allow_null=True)
 
     class Meta:
         model = ECUser
-        fields = ["customer_id","username","password","language_id",
-                  "contact_id","is_power_user","is_deleted","is_active",
-                  "sa_user_responsibilities"]
-        # read_only_fields = ("id", "customer","contact","language")
+        fields = ["id","customer_id","contact_id","language_id","username","password","is_power_user","is_deleted","is_active","sa_user_responsibilities"]
         # fields = "__all__"
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
-        # print(validated_data,"validated_data")
         instance = ECUser(**validated_data)
         if isinstance(self._kwargs["data"], dict):
             instance.save()
